@@ -1,0 +1,33 @@
+<robot name="example_robot">
+  <!-- Base link -->
+  <link name="base_link"/>
+
+  <!-- Sensor link -->
+  <link name="sensor_front">
+    <inertial>
+      <mass value="0.1"/>
+      <origin xyz="0 0 0"/>
+    </inertial>
+  </link>
+
+  <link name="sensor_back">
+    <inertial>
+      <mass value="0.1"/>
+      <origin xyz="0 0 0"/>
+    </inertial>
+  </link>
+
+  <!-- Joint connecting base_link to sensor_link -->
+  <joint name="sensor_joint_front" type="fixed">
+    <parent link="base_link"/>
+    <child link="sensor_front"/>
+    <origin xyz="0.15 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <joint name="sensor_joint_back" type="fixed">
+    <parent link="base_link"/>
+    <child link="sensor_back"/>
+    <origin xyz="-0.15 0 0" rpy="0 0 0"/>
+  </joint>
+
+</robot>

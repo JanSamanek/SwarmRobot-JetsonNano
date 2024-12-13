@@ -1,0 +1,18 @@
+services:
+  ros2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ros2
+    network_mode: host
+    tty: true
+
+  microros_agent:
+    image: microros/micro-ros-agent:humble
+    container_name: microros-agent
+    network_mode: host
+    privileged: true 
+    volumes:
+      - /dev:/dev
+    command: "serial --dev /dev/ttyACM0"
+    tty: true
