@@ -1,0 +1,19 @@
+<robot name="example_robot">
+
+  <link name="base_link"/>
+  <link name="ultrasonic_sensor_front"/>
+  <link name="ultrasonic_sensor_back"/>
+
+  <joint name="ultrasonic_sensor_front_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="ultrasonic_sensor_front"/>
+    <origin xyz="0.15 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <joint name="ultrasonic_sensor_back_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="ultrasonic_sensor_back"/>
+    <origin xyz="-0.15 0 0" rpy="0 0 0"/>
+  </joint>
+
+</robot>
