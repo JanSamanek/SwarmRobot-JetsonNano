@@ -11,7 +11,6 @@ find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(robot_state_publisher REQUIRED)
-find_package(sllidar_ros2 REQUIRED)
 
 add_executable(controller_node src/controller_node.cpp)
 ament_target_dependencies(controller_node  rclcpp geometry_msgs sensor_msgs)
