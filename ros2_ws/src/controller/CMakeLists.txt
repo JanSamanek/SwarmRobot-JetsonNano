@@ -10,22 +10,17 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(robot_state_publisher REQUIRED)
 
-add_executable(controller_node src/controller_node.cpp)
-ament_target_dependencies(controller_node  rclcpp geometry_msgs sensor_msgs)
+add_executable(controller src/controller_node.cpp)
+ament_target_dependencies(controller  rclcpp geometry_msgs sensor_msgs)
 
-target_include_directories(controller_node PUBLIC
+target_include_directories(controller PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-target_compile_features(controller_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+target_compile_features(controller PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
-install(TARGETS controller_node
+install(TARGETS controller
   DESTINATION lib/${PROJECT_NAME})
-
-install(DIRECTORY launch/
-  DESTINATION share/${PROJECT_NAME}/launch
-)
 
 install(DIRECTORY urdf/
   DESTINATION share/${PROJECT_NAME}/urdf

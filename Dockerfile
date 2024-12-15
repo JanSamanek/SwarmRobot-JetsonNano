@@ -2,21 +2,21 @@ FROM ros:humble
 
 SHELL [ "/bin/bash", "-c" ]
 
-WORKDIR /ros2_ws
-
 RUN apt-get update && apt-get install -y \
-    python3-colcon-common-extensions \
-    python3-rosdep \
-    build-essential \
-    ros-humble-robot-state-publisher \
-    && rm -rf /var/lib/apt/lists/*
+python3-colcon-common-extensions \
+python3-rosdep \
+build-essential \
+&& rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /ros2ws/src
+WORKDIR /ros2_ws
 
 RUN rosdep update
 
 COPY ros2_ws/src ./src
 
-RUN source /opt/ros/humble/setup.bash && rosdep install --from-paths src --ignore-src -r -y
-RUN source /opt/ros/humble/setup.bash && colcon build --symlink-install
-RUN source /opt/ros/humble/setup.bash && source /ros_ws/install/setup.bash
+RUN source /opt/ros/humble/setup.bash && \
+    rosdep install --from-paths src --ignore-src -r -y && \
+    colcon build --symlink-install
 
-ENTRYPOINT ["ros2 ", "launch", "controller", "controller.launch.py"]
+ENTRYPOINT ["/entrypoint.sh"]
