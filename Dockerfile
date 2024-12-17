@@ -6,16 +6,21 @@ RUN apt-get update && apt-get install -y \
 python3-colcon-common-extensions \
 python3-rosdep \
 build-essential \
-&& rm -rf /var/lib/apt/lists/*
+git \
+&& rm -rf /var/lib/apt/lists/* 
 
 RUN mkdir -p /ros2ws/src
 WORKDIR /ros2_ws
 
-RUN rosdep update
+RUN cd src/ && \
+    git clone https://github.com/Slamtec/rplidar_ros.git -b hubmle && \
+    git clone https://github.com/ajtudela/laser_segmentation.git
 
 COPY ros2_ws/src ./src
 
+
 RUN source /opt/ros/humble/setup.bash && \
+    rosdep update && \
     rosdep install --from-paths src --ignore-src -r -y && \
     colcon build --symlink-install
 

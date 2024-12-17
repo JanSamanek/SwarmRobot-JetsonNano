@@ -5,7 +5,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/twist.hpp"
-#include "sensor_msgs/msg/range.hpp"
+#include "slg_msgs/msg/segment_array.hpp"
 
 using std::placeholders::_1;
 using namespace std::chrono_literals;
@@ -17,27 +17,22 @@ class ControllerNode : public rclcpp::Node
     : Node("controller_node")
     {
       m_publisher = this->create_publisher<geometry_msgs::msg::Twist>("instructions", 10);
-      m_subscription = this->create_subscription<sensor_msgs::msg::Range>(
-      "ping/front/measurement", 10, std::bind(&ControllerNode::front_ultrasonic_sensor_callabck, this, _1));
+      m_subscriber = this->create_subscription<slg_msgs::msg::SegmentArray>(
+        "segments", 10, std::bind(&ControllerNode::segments_detected_callback, this, _1));
     }
 
   private:
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_publisher;
-    rclcpp::Subscription<sensor_msgs::msg::Range>::SharedPtr m_subscription;
+    rclcpp::Subscription<slg_msgs::msg::SegmentArray>::SharedPtr m_subscriber;
 
-    void front_ultrasonic_sensor_callabck(const sensor_msgs::msg::Range & msg) const
+    void segments_detected_callback(slg_msgs::msg::SegmentArray::SharedPtr msg) const
     {
-      RCLCPP_INFO(this->get_logger(), "PING-FRONT distance: '%f'", msg.range);
-
-      auto message = geometry_msgs::msg::Twist();
-      message.linear.x = 0;
-      message.linear.y = 0;
-      message.linear. z = 0;
-
-      message.angular.x = 0;
-      message.angular.y = 0;
-      message.angular.z = 0;
-      m_publisher->publish(message);
+      int i = 0;
+      for(auto segment : msg->segments)
+      { 
+        i++;
+      }
+      RCLCPP_INFO(this->get_logger(), "Segment Num '%i'", i);
     }
 };
 
