@@ -5,10 +5,6 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/twist.hpp"
-#include "slg_msgs/msg/segment_array.hpp"
-
-using std::placeholders::_1;
-using namespace std::chrono_literals;
 
 class ControllerNode : public rclcpp::Node
 {
@@ -16,24 +12,11 @@ class ControllerNode : public rclcpp::Node
     ControllerNode()
     : Node("controller_node")
     {
-      m_publisher = this->create_publisher<geometry_msgs::msg::Twist>("instructions", 10);
-      m_subscriber = this->create_subscription<slg_msgs::msg::SegmentArray>(
-        "segments", 10, std::bind(&ControllerNode::segments_detected_callback, this, _1));
+      instructions_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("instructions", 10);
     }
 
   private:
-    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_publisher;
-    rclcpp::Subscription<slg_msgs::msg::SegmentArray>::SharedPtr m_subscriber;
-
-    void segments_detected_callback(slg_msgs::msg::SegmentArray::SharedPtr msg) const
-    {
-      int i = 0;
-      for(auto segment : msg->segments)
-      { 
-        i++;
-      }
-      RCLCPP_INFO(this->get_logger(), "Segment Num '%i'", i);
-    }
+    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr instructions_pub_;
 };
 
 int main(int argc, char ** argv)
