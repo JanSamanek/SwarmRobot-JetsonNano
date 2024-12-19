@@ -15,9 +15,19 @@ using std::placeholders::_1;
 
 TrackerNode::TrackerNode() : Node("tracker_node")
 {
+    this->declare_parameter<std::string>("segments_topic", "segments");
+    this->declare_parameter<std::string>("tracked_objects_topic", "tracked_objects");
+    this->declare_parameter<double>("distance_threshold", 0.1);
+    this->declare_parameter<int>("disappeared_threshold", 20);
+
+    this->get_parameter<std::string>("tracked_objects_topic", tracked_objects_topic_);
+    this->get_parameter<std::string>("segments_topic", segments_topic_);
+    this->get_parameter<double>("distance_threshold", distance_threshold_);
+    this->get_parameter<int>("disappeared_threshold", disappeared_threshold_);
+    
     segment_array_sub_ = this->create_subscription<slg_msgs::msg::SegmentArray>(
-        "segments", 10, std::bind(&TrackerNode::segments_subscriber_callback, this, _1));   // todo configuration of topic
-    tracked_objects_viz_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("tracked_objects/visualization", 10); // todo configuration of topic
+        segments_topic_, 10, std::bind(&TrackerNode::segments_subscriber_callback, this, _1)); 
+    tracked_objects_viz_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(tracked_objects_topic_+ "/visualization", 10);
 
     // TODO: configuration file
     TrackedObject tracked_1;
@@ -31,8 +41,6 @@ TrackerNode::TrackerNode() : Node("tracker_node")
 
 void TrackerNode::segments_subscriber_callback(slg_msgs::msg::SegmentArray::SharedPtr msg)
 {  
-    auto distance_threshold = 0.1;
-    auto disappeared_threshold = 20;
 
     std::vector<slg::Point2D> segment_centroids;
     for(const auto& segment_msg : msg->segments)
@@ -49,7 +57,7 @@ void TrackerNode::segments_subscriber_callback(slg_msgs::msg::SegmentArray::Shar
         for(const auto&  centroids : segment_centroids)
         {
             auto distance = std::get_euclidean_distance(tracked.centroid, centroids);
-            if(distance <= distance_threshold && distance < closest_distance)
+            if(distance <= distance_threshold_ && distance < closest_distance)
             {
                 closest_distance = distance;
                 closest_centroid = centroids;
@@ -65,7 +73,7 @@ void TrackerNode::segments_subscriber_callback(slg_msgs::msg::SegmentArray::Shar
         else
         {
             tracked.disappeared_count++;
-            if(tracked.disappeared_count > disappeared_threshold)
+            if(tracked.disappeared_count > disappeared_threshold_)
             {
                 RCLCPP_ERROR(this->get_logger(), "Lost track of object [ID %i]", tracked.id);
             }

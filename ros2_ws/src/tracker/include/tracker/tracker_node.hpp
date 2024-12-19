@@ -26,12 +26,16 @@ private:
     rclcpp::Subscription<slg_msgs::msg::SegmentArray>::SharedPtr segment_array_sub_;
     void segments_subscriber_callback(slg_msgs::msg::SegmentArray::SharedPtr msg);
 
+    std::string segments_topic_;
+    std::string tracked_objects_topic_;
+    int disappeared_threshold_;
+    double distance_threshold_;
+
+    std::vector<TrackedObject> tracked_objects_;
+
     visualization_msgs::msg::MarkerArray create_tracked_objects_viz(
         const std_msgs::msg::Header& header,
         const std::vector<TrackedObject>& tracked_objects) const;
-
-    // TODO: configuration file
-    std::vector<TrackedObject> tracked_objects_;
 };
 
 #endif // TRACKER_NODE_HPP

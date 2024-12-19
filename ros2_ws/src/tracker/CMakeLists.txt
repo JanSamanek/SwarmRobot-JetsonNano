@@ -34,17 +34,22 @@ target_link_libraries(${library_name}
   ${visualization_msgs_TARGETS}
 )
 
-add_executable(${PROJECT_NAME} src/main.cpp)
-target_link_libraries(${PROJECT_NAME}
+set(executable_name ${PROJECT_NAME}_node)
+
+add_executable(${executable_name} src/main.cpp)
+target_link_libraries(${executable_name}
   PRIVATE
   ${library_name}
   rclcpp::rclcpp
 )
 
-target_compile_features(tracker PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+target_compile_features(${executable_name} PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
-install(TARGETS tracker
+install(TARGETS ${executable_name}
   DESTINATION lib/${PROJECT_NAME})
+
+install(DIRECTORY launch config
+  DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

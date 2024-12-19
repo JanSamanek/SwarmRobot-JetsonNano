@@ -1,0 +1,6 @@
+tracker_ns/tracker:
+  ros__parameters:
+    segments_topic: segments
+    tracked_objects_topic: tracked_objects
+    distance_threshold: 0.1
+    disappeared_threshold: 20
