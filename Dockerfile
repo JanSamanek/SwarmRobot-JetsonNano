@@ -21,7 +21,7 @@ COPY ros2_ws/src ./src
 
 RUN source /opt/ros/humble/setup.bash && \
     rosdep update && \
-    rosdep install --from-paths src --ignore-src -r -y && \
+    rosdep install --from-paths src --ignore-src -r --rosdistro humble -y && \
     colcon build --symlink-install
 
 ENTRYPOINT ["/entrypoint.sh"]

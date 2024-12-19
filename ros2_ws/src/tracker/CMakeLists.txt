@@ -8,11 +8,11 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(slg_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(tracker_msgs REQUIRED)
 
 set(source
-  src/main.cpp
   src/utils.cpp
   src/tracker_node.cpp
 )
@@ -28,10 +28,9 @@ target_include_directories(${library_name} PUBLIC
 target_link_libraries(${library_name}
   PUBLIC
   rclcpp::rclcpp
-  ${sensor_msgs_TARGETS}
-  ${slg_msgs_TARGETS}
-  slg_msgs::slg_core
   ${visualization_msgs_TARGETS}
+  ${tracker_msgs_TARGETS}
+  ${geometry_msgs_TARGETS}
 )
 
 set(executable_name ${PROJECT_NAME}_node)

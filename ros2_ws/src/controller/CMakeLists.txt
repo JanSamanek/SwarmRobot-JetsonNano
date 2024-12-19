@@ -9,22 +9,46 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(slg_msgs REQUIRED)
+find_package(tracker_msgs REQUIRED)
 
+set(source
+  src/controller_node.cpp
+)
 
-add_executable(controller src/controller_node.cpp)
-ament_target_dependencies(controller  rclcpp geometry_msgs)
+set(library_name ${PROJECT_NAME}_core)
 
-target_include_directories(controller PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-target_compile_features(controller PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+add_library(${library_name} SHARED ${source})
+target_include_directories(${library_name} PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/${PROJECT_NAME}>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
 
-install(TARGETS controller
+target_link_libraries(${library_name}
+  PUBLIC
+  rclcpp::rclcpp
+  ${slg_msgs_TARGETS}
+  slg_msgs::slg_core
+  ${tracker_msgs_TARGETS}
+  ${geometry_msgs_TARGETS}
+)
+
+set(executable_name ${PROJECT_NAME}_node)
+
+add_executable(${executable_name} src/main.cpp)
+target_link_libraries(${executable_name}
+  PRIVATE
+  ${library_name}
+  rclcpp::rclcpp
+)
+
+target_compile_features(${executable_name} PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+
+install(TARGETS ${executable_name}
   DESTINATION lib/${PROJECT_NAME})
 
-install(DIRECTORY urdf/
-  DESTINATION share/${PROJECT_NAME}/urdf
-)
+install(DIRECTORY launch config
+  DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

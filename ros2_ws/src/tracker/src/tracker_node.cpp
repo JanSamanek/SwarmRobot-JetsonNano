@@ -1,7 +1,6 @@
 #include "tracker_node.hpp"
 #include "utils.hpp"
-#include "slg_msgs/point2D.hpp"
-#include "slg_msgs/segment2D.hpp"
+#include "tracker_msgs/msg/tracked_object.hpp"
 
 #include <vector>
 #include <chrono>
@@ -11,56 +10,58 @@
 #include <optional>
 #include <cmath>
 
+
 using std::placeholders::_1;
 
 TrackerNode::TrackerNode() : Node("tracker_node")
 {
-    this->declare_parameter<std::string>("segments_topic", "segments");
+    this->declare_parameter<std::string>("detected_objects_topic", "detected_objects");
     this->declare_parameter<std::string>("tracked_objects_topic", "tracked_objects");
     this->declare_parameter<double>("distance_threshold", 0.1);
     this->declare_parameter<int>("disappeared_threshold", 20);
 
+    this->get_parameter<std::string>("detected_objects_topic", detected_objects_topic_);
     this->get_parameter<std::string>("tracked_objects_topic", tracked_objects_topic_);
-    this->get_parameter<std::string>("segments_topic", segments_topic_);
     this->get_parameter<double>("distance_threshold", distance_threshold_);
     this->get_parameter<int>("disappeared_threshold", disappeared_threshold_);
-    
-    segment_array_sub_ = this->create_subscription<slg_msgs::msg::SegmentArray>(
-        segments_topic_, 10, std::bind(&TrackerNode::segments_subscriber_callback, this, _1)); 
+
+    tracked_objects_pub_ = this->create_publisher<tracker_msgs::msg::TrackedObjectArray>(tracked_objects_topic_, 10);
     tracked_objects_viz_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(tracked_objects_topic_+ "/visualization", 10);
 
+    detected_objects_sub_ = this->create_subscription<tracker_msgs::msg::DetectedObjectArray>(
+        detected_objects_topic_, 10, std::bind(&TrackerNode::detected_objects_subscriber_callback, this, _1)); 
+
     // TODO: configuration file
+    geometry_msgs::msg::Point centroid;
+    centroid.x = -0.5;
+    centroid.y = 0;
+    centroid.z = 0;
+
     TrackedObject tracked_1;
-    tracked_1.id = 0;
-    tracked_1.centroid = slg::Point2D(-0.5,0);
+    tracked_1.id = "0";
+    tracked_1.centroid = centroid;
     tracked_1.disappeared_count = 0;
     tracked_objects_ = {tracked_1};
 
     RCLCPP_INFO(this->get_logger(),"Activating tracker node");
 }
 
-void TrackerNode::segments_subscriber_callback(slg_msgs::msg::SegmentArray::SharedPtr msg)
-{  
-
-    std::vector<slg::Point2D> segment_centroids;
-    for(const auto& segment_msg : msg->segments)
-    { 
-        slg::Segment2D segment(segment_msg);
-        segment_centroids.push_back(segment.centroid());
-    }
-
+void TrackerNode::detected_objects_subscriber_callback(tracker_msgs::msg::DetectedObjectArray::SharedPtr msg)
+{
+    auto detected_objects = msg->detected_objects;
+    
     for(auto& tracked : tracked_objects_)
     {
-        std::optional<slg::Point2D> closest_centroid;
+        std::optional<geometry_msgs::msg::Point> closest_centroid;
         double closest_distance = INFINITY;
 
-        for(const auto&  centroids : segment_centroids)
+        for(const auto&  detected_centroid : detected_objects)
         {
-            auto distance = std::get_euclidean_distance(tracked.centroid, centroids);
+            auto distance = std::get_euclidean_distance(tracked.centroid, detected_centroid);
             if(distance <= distance_threshold_ && distance < closest_distance)
             {
                 closest_distance = distance;
-                closest_centroid = centroids;
+                closest_centroid = detected_centroid;
             }
         }
 
@@ -68,20 +69,20 @@ void TrackerNode::segments_subscriber_callback(slg_msgs::msg::SegmentArray::Shar
         {
             tracked.disappeared_count = 0;
             tracked.centroid = closest_centroid.value();
-            segment_centroids.erase(std::remove(segment_centroids.begin(), segment_centroids.end(), closest_centroid.value()), segment_centroids.end());
+            detected_objects.erase(std::remove(detected_objects.begin(), detected_objects.end(), closest_centroid.value()), detected_objects.end());
         }
         else
         {
             tracked.disappeared_count++;
             if(tracked.disappeared_count > disappeared_threshold_)
             {
-                RCLCPP_ERROR(this->get_logger(), "Lost track of object [ID %i]", tracked.id);
+                RCLCPP_ERROR(this->get_logger(), "Lost track of object [ID %s]", tracked.id.c_str());
             }
         }
 
         tracked_objects_viz_pub_->publish(create_tracked_objects_viz(msg->header, tracked_objects_));
+        tracked_objects_pub_->publish(create_tracked_objects_msg(msg->header, tracked_objects_));
     }
-    
 }
 
 visualization_msgs::msg::MarkerArray TrackerNode::create_tracked_objects_viz(
@@ -126,10 +127,10 @@ visualization_msgs::msg::MarkerArray TrackerNode::create_tracked_objects_viz(
     {
         auto current_tracked_object = tracked_objects[i];
 
-        viz_centroids.id = current_tracked_object.id;
+        viz_centroids.id = i;
         viz_text.id = i;
 
-        viz_text.text = std::to_string(current_tracked_object.id);
+        viz_text.text = current_tracked_object.id;
         viz_text.pose.position.x = current_tracked_object.centroid.x - 0.1;
         viz_text.pose.position.y = current_tracked_object.centroid.y - 0.1;
         viz_text.pose.position.z = 0.05;
@@ -142,4 +143,24 @@ visualization_msgs::msg::MarkerArray TrackerNode::create_tracked_objects_viz(
     }
 
   return viz_array;
+}
+
+tracker_msgs::msg::TrackedObjectArray TrackerNode::create_tracked_objects_msg(
+    const std_msgs::msg::Header &header, 
+    const std::vector<TrackedObject> &tracked_objects) const
+{
+    tracker_msgs::msg::TrackedObjectArray tracked_objects_msg;
+    for(auto tracked_object : tracked_objects)
+    {
+        tracker_msgs::msg::TrackedObject tracked_object_msg;
+        tracked_object_msg.object_id = tracked_object.id;
+        tracked_object_msg.position.header = header;
+        tracked_object_msg.position.point.x = tracked_object.centroid.x;
+        tracked_object_msg.position.point.y = tracked_object.centroid.y;
+        tracked_object_msg.position.point.z = 0;
+
+        tracked_objects_msg.tracked_objects.push_back(tracked_object_msg);
+    }
+
+    return tracked_objects_msg;
 }

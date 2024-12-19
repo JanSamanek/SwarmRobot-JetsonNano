@@ -4,7 +4,7 @@
   <name>tracker</name>
   <version>0.0.0</version>
   <description>tracking robots based on lidar readings</description>
-  <maintainer email="jan.d.samanek@gmail.com">Jan Samanek</maintainer>
+  <maintainer email="jan.d.samanek@gmail.com">Jan Šamánek</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
@@ -12,6 +12,7 @@
   <depend>rclcpp</depend>
   <depend>slg_msgs</depend>
   <depend>visualization_msgs</depend>
+  <depend>tracker_msgs</depend>
   
   <exec_depend>ros2launch</exec_depend>
   
