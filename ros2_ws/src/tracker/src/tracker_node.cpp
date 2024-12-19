@@ -18,17 +18,19 @@ TrackerNode::TrackerNode() : Node("tracker_node")
     segment_array_sub_ = this->create_subscription<slg_msgs::msg::SegmentArray>(
         "segments", 10, std::bind(&TrackerNode::segments_subscriber_callback, this, _1));   // todo configuration of topic
     tracked_objects_viz_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("tracked_objects/visualization", 10); // todo configuration of topic
-}
 
-void TrackerNode::segments_subscriber_callback(slg_msgs::msg::SegmentArray::SharedPtr msg) const
-{
     // TODO: configuration file
     TrackedObject tracked_1;
     tracked_1.id = 0;
-    tracked_1.centroid = slg::Point2D(1,1);
+    tracked_1.centroid = slg::Point2D(-0.5,0);
     tracked_1.disappeared_count = 0;
+    tracked_objects_ = {tracked_1};
 
-    std::vector<TrackedObject> tracked_objects = {tracked_1};
+    RCLCPP_INFO(this->get_logger(),"Activating tracker node");
+}
+
+void TrackerNode::segments_subscriber_callback(slg_msgs::msg::SegmentArray::SharedPtr msg)
+{  
     auto distance_threshold = 0.1;
     auto disappeared_threshold = 20;
 
@@ -39,8 +41,7 @@ void TrackerNode::segments_subscriber_callback(slg_msgs::msg::SegmentArray::Shar
         segment_centroids.push_back(segment.centroid());
     }
 
-
-    for(auto& tracked : tracked_objects)
+    for(auto& tracked : tracked_objects_)
     {
         std::optional<slg::Point2D> closest_centroid;
         double closest_distance = INFINITY;
@@ -59,25 +60,25 @@ void TrackerNode::segments_subscriber_callback(slg_msgs::msg::SegmentArray::Shar
         {
             tracked.disappeared_count = 0;
             tracked.centroid = closest_centroid.value();
-            segment_centroids.erase(std::remove(segment_centroids.begin(), segment_centroids.end(), closest_centroid), segment_centroids.end());
+            segment_centroids.erase(std::remove(segment_centroids.begin(), segment_centroids.end(), closest_centroid.value()), segment_centroids.end());
         }
         else
         {
             tracked.disappeared_count++;
             if(tracked.disappeared_count > disappeared_threshold)
             {
-                RCLCPP_FATAL(this->get_logger(), "Lost track of object '%i'", tracked.id);
+                RCLCPP_ERROR(this->get_logger(), "Lost track of object [ID %i]", tracked.id);
             }
         }
 
-        tracked_objects_viz_pub_->publish(create_tracked_objects_viz(msg->header, tracked_objects));
+        tracked_objects_viz_pub_->publish(create_tracked_objects_viz(msg->header, tracked_objects_));
     }
     
 }
 
 visualization_msgs::msg::MarkerArray TrackerNode::create_tracked_objects_viz(
-    std_msgs::msg::Header header, 
-    std::vector<TrackedObject> tracked_objects) const
+    const std_msgs::msg::Header& header, 
+    const std::vector<TrackedObject>& tracked_objects) const
 {
     visualization_msgs::msg::MarkerArray viz_array;
     
@@ -94,15 +95,20 @@ visualization_msgs::msg::MarkerArray TrackerNode::create_tracked_objects_viz(
     viz_centroids.ns = "tracked_objects";
     viz_centroids.type = visualization_msgs::msg::Marker::SPHERE;
     viz_centroids.action = visualization_msgs::msg::Marker::ADD;
-    viz_centroids.scale.x = viz_centroids.scale.y = 0.15;
+    viz_centroids.scale.x = viz_centroids.scale.y = viz_centroids.scale.z = 0.2;
+    viz_centroids.color.r = 1.0;
+    viz_centroids.color.g = 0.0;
+    viz_centroids.color.b = 0.0;
+    viz_centroids.color.a = 1.0; 
 
+    // create id marker
     visualization_msgs::msg::Marker viz_text;
     viz_text.header = header;
     viz_text.lifetime = rclcpp::Duration(0, 10);
     viz_text.ns = "id";
     viz_text.type = visualization_msgs::msg::Marker::TEXT_VIEW_FACING;
     viz_text.action = visualization_msgs::msg::Marker::ADD;
-    viz_text.scale.z = 0.25;
+    viz_text.scale.z = 0.15;
     viz_text.color.r = 1.0;
     viz_text.color.g = 1.0;
     viz_text.color.b = 1.0;
@@ -116,8 +122,9 @@ visualization_msgs::msg::MarkerArray TrackerNode::create_tracked_objects_viz(
         viz_text.id = i;
 
         viz_text.text = std::to_string(current_tracked_object.id);
-        viz_text.pose.position = current_tracked_object.centroid;
-        viz_text.pose.position.z = 0.10;
+        viz_text.pose.position.x = current_tracked_object.centroid.x - 0.1;
+        viz_text.pose.position.y = current_tracked_object.centroid.y - 0.1;
+        viz_text.pose.position.z = 0.05;
 
         viz_centroids.pose.position = current_tracked_object.centroid;
         viz_centroids.pose.position.z = 0.0;
