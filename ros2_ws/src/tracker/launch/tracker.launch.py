@@ -13,7 +13,6 @@ def generate_launch_description():
     return LaunchDescription([
         Node(
             package='tracker',
-            namespace='tracker_ns',
             executable='tracker_node',
             name='tracker',
             parameters=[config]

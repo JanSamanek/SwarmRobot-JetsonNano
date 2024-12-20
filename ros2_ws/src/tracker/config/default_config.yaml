@@ -1,4 +1,4 @@
-tracker_ns/tracker:
+tracker:
   ros__parameters:
     detected_objects_topic: detected_objects
     tracked_objects_topic: tracked_objects

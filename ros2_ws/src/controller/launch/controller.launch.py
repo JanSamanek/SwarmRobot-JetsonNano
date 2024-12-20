@@ -13,7 +13,6 @@ def generate_launch_description():
     return LaunchDescription([
         Node(
             package='controller',
-            namespace='controller_ns',
             executable='controller_node',
             name='controller',
             parameters=[config]
