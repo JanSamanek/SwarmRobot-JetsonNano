@@ -19,28 +19,31 @@ TrackerNode::TrackerNode() : Node("tracker_node")
     this->declare_parameter<std::string>("tracked_objects_topic", "tracked_objects");
     this->declare_parameter<double>("distance_threshold", 0.1);
     this->declare_parameter<int>("disappeared_threshold", 20);
+    this->declare_parameter<double>("measurement_frequency", -1);
+    this->declare_parameter<bool>("kalman_filtering_enabled", true);
 
     this->get_parameter<std::string>("detected_objects_topic", detected_objects_topic_);
     this->get_parameter<std::string>("tracked_objects_topic", tracked_objects_topic_);
     this->get_parameter<double>("distance_threshold", distance_threshold_);
     this->get_parameter<int>("disappeared_threshold", disappeared_threshold_);
+    this->get_parameter<double>("measurement_frequency", measurement_frequency_);
+    this->get_parameter<bool>("kalman_filtering_enabled", kalman_filtering_enabled_);
 
+    if(measurement_frequency_ == -1)
+    {
+        RCLCPP_FATAL(this->get_logger(), "Measurement frequency not set");
+    }
+    
     tracked_objects_pub_ = this->create_publisher<tracker_msgs::msg::TrackedObjectArray>(tracked_objects_topic_, 10);
     tracked_objects_viz_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(tracked_objects_topic_+ "/visualization", 10);
 
     detected_objects_sub_ = this->create_subscription<tracker_msgs::msg::DetectedObjectArray>(
         detected_objects_topic_, 10, std::bind(&TrackerNode::detected_objects_subscriber_callback, this, _1)); 
 
-    // TODO: configuration file
-    geometry_msgs::msg::Point centroid;
-    centroid.x = -0.5;
-    centroid.y = 0;
-    centroid.z = 0;
-
-    TrackedObject tracked_1;
-    tracked_1.id = "0";
-    tracked_1.centroid = centroid;
-    tracked_1.disappeared_count = 0;
+    double dt = 1.0/measurement_frequency_;
+    
+    Eigen::Vector3d centroid(0.5, 0, 0); // TODO: configuration file
+    TrackedObject tracked_1("robot", centroid, KalmanFilter(centroid, dt), 0);
     tracked_objects_ = {tracked_1};
 
     RCLCPP_INFO(this->get_logger(),"Activating tracker node");
@@ -48,28 +51,33 @@ TrackerNode::TrackerNode() : Node("tracker_node")
 
 void TrackerNode::detected_objects_subscriber_callback(tracker_msgs::msg::DetectedObjectArray::SharedPtr msg)
 {
-    auto detected_objects = msg->detected_objects;
+    auto detected_centroids = std::to_eigen(msg->detected_objects);
     
     for(auto& tracked : tracked_objects_)
     {
-        std::optional<geometry_msgs::msg::Point> closest_centroid;
+        std::optional<Eigen::Vector3d> centroid_candidate;
         double closest_distance = INFINITY;
 
-        for(const auto&  detected_centroid : detected_objects)
+        auto centroid_reference = kalman_filtering_enabled_ ? tracked.kalman.predict() : tracked.centroid;
+
+        for(const auto&  detected_centroid : detected_centroids)
         {
-            auto distance = std::get_euclidean_distance(tracked.centroid, detected_centroid);
+            auto distance = std::get_euclidean_distance(centroid_reference, detected_centroid);
+
             if(distance <= distance_threshold_ && distance < closest_distance)
             {
                 closest_distance = distance;
-                closest_centroid = detected_centroid;
+                centroid_candidate = detected_centroid;
             }
         }
 
-        if(closest_centroid.has_value())
+        if(centroid_candidate.has_value())
         {
             tracked.disappeared_count = 0;
-            tracked.centroid = closest_centroid.value();
-            detected_objects.erase(std::remove(detected_objects.begin(), detected_objects.end(), closest_centroid.value()), detected_objects.end());
+            tracked.centroid = kalman_filtering_enabled_ ? tracked.kalman.update(centroid_candidate.value()) : centroid_candidate.value();
+            detected_centroids.erase(
+                std::remove(detected_centroids.begin(), detected_centroids.end(), centroid_candidate.value()),
+                detected_centroids.end());
         }
         else
         {
@@ -131,11 +139,12 @@ visualization_msgs::msg::MarkerArray TrackerNode::create_tracked_objects_viz(
         viz_text.id = i;
 
         viz_text.text = current_tracked_object.id;
-        viz_text.pose.position.x = current_tracked_object.centroid.x - 0.1;
-        viz_text.pose.position.y = current_tracked_object.centroid.y - 0.1;
+        viz_text.pose.position.x = current_tracked_object.centroid.x() - 0.1;
+        viz_text.pose.position.y = current_tracked_object.centroid.y() - 0.1;
         viz_text.pose.position.z = 0.05;
 
-        viz_centroids.pose.position = current_tracked_object.centroid;
+        viz_centroids.pose.position.x = current_tracked_object.centroid.x();
+        viz_centroids.pose.position.y = current_tracked_object.centroid.y();
         viz_centroids.pose.position.z = 0.0;
 
         viz_array.markers.push_back(viz_centroids);
@@ -155,8 +164,8 @@ tracker_msgs::msg::TrackedObjectArray TrackerNode::create_tracked_objects_msg(
         tracker_msgs::msg::TrackedObject tracked_object_msg;
         tracked_object_msg.object_id = tracked_object.id;
         tracked_object_msg.position.header = header;
-        tracked_object_msg.position.point.x = tracked_object.centroid.x;
-        tracked_object_msg.position.point.y = tracked_object.centroid.y;
+        tracked_object_msg.position.point.x = tracked_object.centroid.x();
+        tracked_object_msg.position.point.y = tracked_object.centroid.y();
         tracked_object_msg.position.point.z = 0;
 
         tracked_objects_msg.tracked_objects.push_back(tracked_object_msg);

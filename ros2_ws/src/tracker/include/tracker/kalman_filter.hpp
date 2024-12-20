@@ -7,7 +7,7 @@ class KalmanFilter {
 public:
     KalmanFilter(const Eigen::Vector3d& init_pos, double dt, 
                    const Eigen::Vector3d& init_acc = Eigen::Vector3d::Zero(), 
-                   double std_acc = 3.0, double pos_std_meas = 0.1);
+                   double std_acc = 3.0, double pos_std_meas = 0.02);
 
     Eigen::Vector3d predict(const Eigen::Vector3d& acc_input = Eigen::Vector3d::Zero());
     Eigen::Vector3d update(const Eigen::Vector3d& measured_pos);

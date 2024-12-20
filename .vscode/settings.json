@@ -76,6 +76,8 @@
         "variant": "cpp",
         "regex": "cpp",
         "dense": "cpp",
-        "core": "cpp"
-    }
+        "core": "cpp",
+        "eigenvalues": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "enabled"
 }
