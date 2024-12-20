@@ -11,9 +11,12 @@ find_package(rclcpp REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tracker_msgs REQUIRED)
+find_package(eigen3_cmake_module REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 set(source
-  src/utils.cpp
+  src/kalman_filter.cpp
+  src/tracker_utils.cpp
   src/tracker_node.cpp
 )
 
@@ -23,11 +26,13 @@ add_library(${library_name} SHARED ${source})
 target_include_directories(${library_name} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/${PROJECT_NAME}>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+  "${Eigen3_INCLUDE_DIRS}"
 )
 
 target_link_libraries(${library_name}
   PUBLIC
   rclcpp::rclcpp
+  Eigen3::Eigen
   ${visualization_msgs_TARGETS}
   ${tracker_msgs_TARGETS}
   ${geometry_msgs_TARGETS}
