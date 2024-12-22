@@ -19,7 +19,7 @@ TrackerNode::TrackerNode() : Node("tracker_node")
     this->declare_parameter<std::string>("tracked_objects_topic", "tracked_objects");
     this->declare_parameter<double>("distance_threshold", 0.1);
     this->declare_parameter<int>("disappeared_threshold", 20);
-    this->declare_parameter<double>("measurement_frequency", -1);
+    this->declare_parameter<double>("measurement_frequency", -1.0);
     this->declare_parameter<bool>("kalman_filtering_enabled", true);
 
     this->get_parameter<std::string>("detected_objects_topic", detected_objects_topic_);
@@ -29,9 +29,9 @@ TrackerNode::TrackerNode() : Node("tracker_node")
     this->get_parameter<double>("measurement_frequency", measurement_frequency_);
     this->get_parameter<bool>("kalman_filtering_enabled", kalman_filtering_enabled_);
 
-    if(measurement_frequency_ == -1)
+    if(measurement_frequency_ == -1.0)
     {
-        RCLCPP_FATAL(this->get_logger(), "Measurement frequency not set");
+        RCLCPP_WARN(this->get_logger(), "Measurement frequency needed for kalman filtering not set");
     }
     
     tracked_objects_pub_ = this->create_publisher<tracker_msgs::msg::TrackedObjectArray>(tracked_objects_topic_, 10);
@@ -42,7 +42,7 @@ TrackerNode::TrackerNode() : Node("tracker_node")
 
     double dt = 1.0/measurement_frequency_;
     
-    Eigen::Vector3d centroid(0.5, 0, 0); // TODO: configuration file
+    Eigen::Vector3d centroid(-0.5, 0, 0); // TODO: configuration file
     TrackedObject tracked_1("robot", centroid, KalmanFilter(centroid, dt), 0);
     tracked_objects_ = {tracked_1};
 
@@ -66,6 +66,7 @@ void TrackerNode::detected_objects_subscriber_callback(tracker_msgs::msg::Detect
 
             if(distance <= distance_threshold_ && distance < closest_distance)
             {
+
                 closest_distance = distance;
                 centroid_candidate = detected_centroid;
             }
