@@ -2,6 +2,7 @@ tracker:
   ros__parameters:
     detected_objects_topic: detected_objects
     tracked_objects_topic: tracked_objects
+    tracking_init_topic: tracking_init
     distance_threshold: 0.1
     disappeared_threshold: 20
     measurement_frequency: 10.0

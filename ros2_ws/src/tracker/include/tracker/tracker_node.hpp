@@ -38,6 +38,7 @@ public:
 private:
     std::string detected_objects_topic_;
     std::string tracked_objects_topic_;
+    std::string tracking_init_topic_;
     int disappeared_threshold_;
     double distance_threshold_;
     double measurement_frequency_;
@@ -46,10 +47,13 @@ private:
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr tracked_objects_viz_pub_;
     rclcpp::Publisher<tracker_msgs::msg::TrackedObjectArray>::SharedPtr tracked_objects_pub_;
 
+    rclcpp::Subscription<tracker_msgs::msg::TrackedObjectArray>::SharedPtr tracking_init_sub_;
+    void tracking_init_subscription_callabck(tracker_msgs::msg::TrackedObjectArray::SharedPtr msg);
+
     rclcpp::Subscription<tracker_msgs::msg::DetectedObjectArray>::SharedPtr detected_objects_sub_;
     void detected_objects_subscriber_callback(tracker_msgs::msg::DetectedObjectArray::SharedPtr msg);
 
-    std::vector<TrackedObject> tracked_objects_;
+    std::vector<TrackedObject> tracked_objects_{};
 
     visualization_msgs::msg::MarkerArray create_tracked_objects_viz(
         const std_msgs::msg::Header& header,

@@ -13,10 +13,12 @@
 
 using std::placeholders::_1;
 
-TrackerNode::TrackerNode() : Node("tracker_node")
+TrackerNode::TrackerNode() : 
+Node("tracker_node")
 {
     this->declare_parameter<std::string>("detected_objects_topic", "detected_objects");
     this->declare_parameter<std::string>("tracked_objects_topic", "tracked_objects");
+    this->declare_parameter<std::string>("tracking_init_topic", "tracked_objects_init");
     this->declare_parameter<double>("distance_threshold", 0.1);
     this->declare_parameter<int>("disappeared_threshold", 20);
     this->declare_parameter<double>("measurement_frequency", -1.0);
@@ -24,6 +26,7 @@ TrackerNode::TrackerNode() : Node("tracker_node")
 
     this->get_parameter<std::string>("detected_objects_topic", detected_objects_topic_);
     this->get_parameter<std::string>("tracked_objects_topic", tracked_objects_topic_);
+    this->get_parameter<std::string>("tracking_init_topic", tracking_init_topic_);
     this->get_parameter<double>("distance_threshold", distance_threshold_);
     this->get_parameter<int>("disappeared_threshold", disappeared_threshold_);
     this->get_parameter<double>("measurement_frequency", measurement_frequency_);
@@ -39,18 +42,31 @@ TrackerNode::TrackerNode() : Node("tracker_node")
 
     detected_objects_sub_ = this->create_subscription<tracker_msgs::msg::DetectedObjectArray>(
         detected_objects_topic_, 10, std::bind(&TrackerNode::detected_objects_subscriber_callback, this, _1)); 
-
-    double dt = 1.0/measurement_frequency_;
-    
-    Eigen::Vector3d centroid(-0.5, 0, 0); // TODO: configuration file
-    TrackedObject tracked_1("robot", centroid, KalmanFilter(centroid, dt), 0);
-    tracked_objects_ = {tracked_1};
+    tracking_init_sub_ = this->create_subscription<tracker_msgs::msg::TrackedObjectArray>(
+        tracking_init_topic_, 10, std::bind(&TrackerNode::tracking_init_subscription_callabck, this, _1));
 
     RCLCPP_INFO(this->get_logger(),"Activating tracker node");
 }
 
+void TrackerNode::tracking_init_subscription_callabck(tracker_msgs::msg::TrackedObjectArray::SharedPtr msg)
+{
+    double dt = 1.0/measurement_frequency_;
+    
+    for(auto tracked : msg->tracked_objects)
+    {
+        Eigen::Vector3d centroid = std::to_eigen(tracked.position.point);
+        tracked_objects_.push_back(TrackedObject(tracked.object_id, centroid,  KalmanFilter(centroid, dt), 0));
+    }
+}
+
 void TrackerNode::detected_objects_subscriber_callback(tracker_msgs::msg::DetectedObjectArray::SharedPtr msg)
 {
+    if(tracked_objects_.empty())
+    {
+        RCLCPP_WARN(this->get_logger(), "Objects to track were not set");
+        return;
+    }
+
     auto detected_centroids = std::to_eigen(msg->detected_objects);
     
     for(auto& tracked : tracked_objects_)
