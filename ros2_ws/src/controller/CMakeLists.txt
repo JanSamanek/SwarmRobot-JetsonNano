@@ -11,6 +11,7 @@ find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(slg_msgs REQUIRED)
 find_package(tracker_msgs REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 set(source
   src/controller_node.cpp
@@ -31,6 +32,7 @@ target_link_libraries(${library_name}
   slg_msgs::slg_core
   ${tracker_msgs_TARGETS}
   ${geometry_msgs_TARGETS}
+  ${nlohmann_json_TARGETS}
 )
 
 set(executable_name ${PROJECT_NAME}_node)
