@@ -82,7 +82,6 @@ void TrackerNode::detected_objects_subscriber_callback(tracker_msgs::msg::Detect
 
             if(distance <= distance_threshold_ && distance < closest_distance)
             {
-
                 closest_distance = distance;
                 centroid_candidate = detected_centroid;
             }
