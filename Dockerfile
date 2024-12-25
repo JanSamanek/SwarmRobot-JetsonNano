@@ -11,7 +11,7 @@ libeigen3-dev \
 git \
 && rm -rf /var/lib/apt/lists/* 
 
-RUN mkdir -p /ros2ws/src
+RUN mkdir -p /ros2_ws/src
 WORKDIR /ros2_ws
 
 RUN cd src/ && \
@@ -21,12 +21,13 @@ RUN cd src/ && \
 COPY ros2_ws/src ./src
 
 
-RUN source /opt/ros/humble/setup.bash && \
+RUN apt-get update && \
+    source /opt/ros/humble/setup.bash && \
     rosdep update && \
     rosdep install --from-paths src --ignore-src -r --rosdistro humble -y && \
     colcon build --symlink-install
 
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x entrypoint.sh
+COPY entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["./entrypoint.sh"]
