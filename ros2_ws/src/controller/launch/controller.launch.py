@@ -13,7 +13,7 @@ def generate_launch_description():
 
     rplidar_launch_file = PythonLaunchDescriptionSource([os.path.join(
       get_package_share_directory('rplidar_ros'), 'launch/'),
-      'view_rplidar_a3_launch.py'])
+      'rplidar_a3_launch.py'])
     
     tracker_launch_file = PythonLaunchDescriptionSource([os.path.join(
       get_package_share_directory('tracker'), 'launch/'),
