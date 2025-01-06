@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
     container_name: ros2
     network_mode: host
+    devices:
+      - /dev/ttyUSB0
     tty: true
 
   microros_agent:
@@ -15,4 +17,3 @@ services:
     volumes:
       - /dev:/dev
     command: "serial --dev /dev/ttyACM0"
-    tty: true
