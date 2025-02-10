@@ -19,7 +19,7 @@ Node("tracker_node")
     this->declare_parameter<std::string>("detected_objects_topic", "detected_objects");
     this->declare_parameter<std::string>("tracked_objects_topic", "tracked_objects");
     this->declare_parameter<std::string>("tracking_init_topic", "tracked_objects_init");
-    this->declare_parameter<double>("distance_threshold", 0.3;
+    this->declare_parameter<double>("distance_threshold", 0.3);
     this->declare_parameter<int>("disappeared_threshold", 20);
     this->declare_parameter<double>("measurement_frequency", -1.0);
     this->declare_parameter<bool>("kalman_filtering_enabled", true);
