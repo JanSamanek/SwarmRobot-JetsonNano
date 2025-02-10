@@ -57,7 +57,7 @@ void TrackerNode::tracking_init_subscription_callabck(tracker_msgs::msg::Tracked
         Eigen::Vector3d centroid = std::to_eigen(tracked.position.point);
         tracked_objects_.push_back(TrackedObject(tracked.object_id, centroid,  KalmanFilter(centroid, dt), 0));
         RCLCPP_INFO(this->get_logger(), 
-        "Tracking initialized: Object ID '%s' at position (x: %.2f, y: %.2f)", id.c_str(), centroid.x, centroid.y);
+        "Tracking initialized: Object ID '%s' at position (x: %.2f, y: %.2f)", tracked.object_id.c_str(), centroid.x, centroid.y);
     }
 }
 
