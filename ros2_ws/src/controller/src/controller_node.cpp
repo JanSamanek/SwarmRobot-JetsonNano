@@ -22,7 +22,7 @@ static double get_vector_length(geometry_msgs::msg::Vector3 vec)
 
 ControllerNode::ControllerNode(): Node("controller_node")
 {
-  this->declare_parameter<double>("apf_gain", 0.85);
+  this->declare_parameter<double>("apf_gain", 0.4);
   this->declare_parameter<double>("inter_agent_distance", 0.5);
   this->declare_parameter<std::string>("tracked_frame_id", "laser");
   this->declare_parameter<std::string>("segments_topic", "segments");
