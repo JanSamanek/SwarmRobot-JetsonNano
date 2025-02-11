@@ -51,7 +51,7 @@ ControllerNode::ControllerNode(): Node("controller_node")
   tracking_init_pub_ = this->create_publisher<tracker_msgs::msg::TrackedObjectArray>(tracking_init_topic_, rclcpp::QoS(10).reliable());
 
   RCLCPP_INFO(this->get_logger(),"Artificial potential field gain: [%.2f]", apf_gain_);
-  RCLCPP_INFO(this->get_logger(),"Inter agent distance: [%d]", inter_agent_distance_);
+  RCLCPP_INFO(this->get_logger(),"Inter agent distance: [%.2f]", inter_agent_distance_);
   RCLCPP_INFO(this->get_logger(),"Activating node...");
 
   initialize_tracking(); 
