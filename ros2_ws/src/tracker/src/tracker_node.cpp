@@ -45,7 +45,10 @@ Node("tracker_node")
     tracking_init_sub_ = this->create_subscription<tracker_msgs::msg::TrackedObjectArray>(
         tracking_init_topic_, rclcpp::QoS(10).reliable(), std::bind(&TrackerNode::tracking_init_subscription_callabck, this, _1));
 
-    RCLCPP_INFO(this->get_logger(),"Activating tracker node");
+    RCLCPP_INFO(this->get_logger(),"Distance threshold: [%.2f]", distance_threshold_);
+    RCLCPP_INFO(this->get_logger(),"Disappeared threshold: [%d]", disappeared_threshold_);
+    RCLCPP_INFO(this->get_logger(),"Measurement frequency: [%.2f]", measurement_frequency_);
+    RCLCPP_INFO(this->get_logger(),"Activating node...");
 }
 
 void TrackerNode::tracking_init_subscription_callabck(tracker_msgs::msg::TrackedObjectArray::SharedPtr msg)
