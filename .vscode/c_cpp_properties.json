@@ -5,6 +5,7 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "/opt/ros/humble/include/**",
+                "/opt/ros/humble/**",
                 "/usr/include/eigen3",
                 "${workspaceFolder}/ros2_ws/install/**"
             ],
