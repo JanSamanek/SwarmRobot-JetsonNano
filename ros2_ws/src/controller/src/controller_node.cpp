@@ -50,11 +50,12 @@ ControllerNode::ControllerNode(): Node("controller_node")
   detected_objects_pub_ = this->create_publisher<tracker_msgs::msg::DetectedObjectArray>(detected_objects_topic_, 10);
   tracking_init_pub_ = this->create_publisher<tracker_msgs::msg::TrackedObjectArray>(tracking_init_topic_, rclcpp::QoS(10).reliable());
 
+  // tracking init 
   tracker_msgs::msg::TrackedObjectArray tracked_object_array_msg = load_tracking_init_msg("tracking_init.json");
 
   rclcpp::sleep_for(std::chrono::milliseconds(2000));
   tracking_init_pub_->publish(tracked_object_array_msg);
-  
+
   while(tracking_init_pub_->get_subscription_count() == 0)
   {
     rclcpp::sleep_for(std::chrono::milliseconds(500));
