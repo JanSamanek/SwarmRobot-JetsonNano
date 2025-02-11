@@ -39,14 +39,9 @@ def generate_launch_description():
         parameters=[controller_config_path]
     )
 
-    controller_node_delayed = TimerAction(
-        period=5.0,  
-        actions=[controller_node]
-    )
-
     return LaunchDescription([
         lidar_node,
         segmentation_node,
         tracker_node,
-        controller_node_delayed
+        controller_node
     ])

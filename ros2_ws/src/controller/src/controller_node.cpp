@@ -50,7 +50,23 @@ ControllerNode::ControllerNode(): Node("controller_node")
   detected_objects_pub_ = this->create_publisher<tracker_msgs::msg::DetectedObjectArray>(detected_objects_topic_, 10);
   tracking_init_pub_ = this->create_publisher<tracker_msgs::msg::TrackedObjectArray>(tracking_init_topic_, rclcpp::QoS(10).reliable());
 
-  tracking_init_pub_->publish(load_tracking_init_msg("tracking_init.json"));
+  tracker_msgs::msg::TrackedObjectArray tracked_object_array_msg = load_tracking_init_msg("tracking_init.json");
+
+  rclcpp::sleep_for(std::chrono::milliseconds(2000));
+  tracking_init_pub_->publish(tracked_object_array_msg);
+  
+  while(tracking_init_pub_->get_subscription_count() == 0)
+  {
+    rclcpp::sleep_for(std::chrono::milliseconds(500));
+    tracking_init_pub_->publish(tracked_object_array_msg);
+  }
+
+  for(auto tracked : tracked_object_array_msg.tracked_objects)
+  {
+    RCLCPP_INFO(this->get_logger(), 
+    "Set to track: Object ID '%s' at position (x: %.2f, y: %.2f)",
+    tracked.object_id.c_str(), tracked.position.point.x, tracked.position.point.y);
+  }
 }
 
 void ControllerNode::segments_subscriber_callback(slg_msgs::msg::SegmentArray::SharedPtr msg)
@@ -131,8 +147,6 @@ tracker_msgs::msg::TrackedObjectArray ControllerNode::load_tracking_init_msg(std
       tracked_object_msg.position.point.z = 0.0;
 
       tracked_object_array_msg.tracked_objects.push_back(tracked_object_msg);
-      RCLCPP_INFO(this->get_logger(), 
-      "Tracking initialized: Object ID '%s' at position (x: %.2f, y: %.2f)", id.c_str(), x, y);
     }
   } 
   catch (const std::exception& e) 
