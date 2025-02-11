@@ -43,7 +43,7 @@ Node("tracker_node")
     detected_objects_sub_ = this->create_subscription<tracker_msgs::msg::DetectedObjectArray>(
         detected_objects_topic_, 10, std::bind(&TrackerNode::detected_objects_subscriber_callback, this, _1)); 
     tracking_init_sub_ = this->create_subscription<tracker_msgs::msg::TrackedObjectArray>(
-        tracking_init_topic_, 10, std::bind(&TrackerNode::tracking_init_subscription_callabck, this, _1));
+        tracking_init_topic_, rclcpp::QoS(10).reliable(), std::bind(&TrackerNode::tracking_init_subscription_callabck, this, _1));
 
     RCLCPP_INFO(this->get_logger(),"Activating tracker node");
 }
