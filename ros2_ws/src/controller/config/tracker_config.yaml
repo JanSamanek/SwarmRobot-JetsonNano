@@ -6,4 +6,4 @@ tracker:
     distance_threshold: 0.1
     disappeared_threshold: 20
     measurement_frequency: 10.0
-    kalman_filtering_enabled: True
+    kalman_filtering_enabled: False

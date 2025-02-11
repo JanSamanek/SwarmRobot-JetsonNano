@@ -50,24 +50,11 @@ ControllerNode::ControllerNode(): Node("controller_node")
   detected_objects_pub_ = this->create_publisher<tracker_msgs::msg::DetectedObjectArray>(detected_objects_topic_, 10);
   tracking_init_pub_ = this->create_publisher<tracker_msgs::msg::TrackedObjectArray>(tracking_init_topic_, rclcpp::QoS(10).reliable());
 
-  // tracking init 
-  tracker_msgs::msg::TrackedObjectArray tracked_object_array_msg = load_tracking_init_msg("tracking_init.json");
+  RCLCPP_INFO(this->get_logger(),"Artificial potential field gain: [%.2f]", apf_gain_);
+  RCLCPP_INFO(this->get_logger(),"Inter agent distance: [%d]", inter_agent_distance_);
+  RCLCPP_INFO(this->get_logger(),"Activating node...");
 
-  rclcpp::sleep_for(std::chrono::milliseconds(2000));
-  tracking_init_pub_->publish(tracked_object_array_msg);
-
-  while(tracking_init_pub_->get_subscription_count() == 0)
-  {
-    rclcpp::sleep_for(std::chrono::milliseconds(500));
-    tracking_init_pub_->publish(tracked_object_array_msg);
-  }
-
-  for(auto tracked : tracked_object_array_msg.tracked_objects)
-  {
-    RCLCPP_INFO(this->get_logger(), 
-    "Set to track: Object ID '%s' at position (x: %.2f, y: %.2f)",
-    tracked.object_id.c_str(), tracked.position.point.x, tracked.position.point.y);
-  }
+  initialize_tracking(); 
 }
 
 void ControllerNode::segments_subscriber_callback(slg_msgs::msg::SegmentArray::SharedPtr msg)
@@ -155,4 +142,25 @@ tracker_msgs::msg::TrackedObjectArray ControllerNode::load_tracking_init_msg(std
     RCLCPP_ERROR(this->get_logger(), "Error: %s", e.what());
   }
   return tracked_object_array_msg;
+}
+
+void ControllerNode::initialize_tracking()
+{
+  tracker_msgs::msg::TrackedObjectArray tracked_object_array_msg = load_tracking_init_msg("tracking_init.json");
+
+  rclcpp::sleep_for(std::chrono::milliseconds(2000));
+  tracking_init_pub_->publish(tracked_object_array_msg);
+
+  while(tracking_init_pub_->get_subscription_count() == 0)
+  {
+    rclcpp::sleep_for(std::chrono::milliseconds(500));
+    tracking_init_pub_->publish(tracked_object_array_msg);
+  }
+
+  for(auto tracked : tracked_object_array_msg.tracked_objects)
+  {
+    RCLCPP_INFO(this->get_logger(), 
+    "Set to track: Object ID '%s' at position (x: %.2f, y: %.2f)",
+    tracked.object_id.c_str(), tracked.position.point.x, tracked.position.point.y);
+  }
 }

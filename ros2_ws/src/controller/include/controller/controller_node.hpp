@@ -33,6 +33,7 @@ class ControllerNode : public rclcpp::Node
     void tracked_objects_subscriber_callback(tracker_msgs::msg::TrackedObjectArray::SharedPtr msg);
 
     tracker_msgs::msg::TrackedObjectArray load_tracking_init_msg(std::string tracking_config_file);
+    void initialize_tracking();
 };
 
 #endif // !CONTROLLER_NODE_H
