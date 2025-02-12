@@ -32,6 +32,9 @@ class ControllerNode : public rclcpp::Node
     rclcpp::Subscription<tracker_msgs::msg::TrackedObjectArray>::SharedPtr tracked_objects_sub_;
     void tracked_objects_subscriber_callback(tracker_msgs::msg::TrackedObjectArray::SharedPtr msg);
 
+    std::shared_ptr<rclcpp::ParameterEventHandler> param_subscriber_;
+    std::shared_ptr<rclcpp::ParameterCallbackHandle> apf_gain_param_cb_handle_;
+
     tracker_msgs::msg::TrackedObjectArray load_tracking_init_msg(std::string tracking_config_file);
     void initialize_tracking();
 };

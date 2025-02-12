@@ -50,6 +50,17 @@ ControllerNode::ControllerNode(): Node("controller_node")
   detected_objects_pub_ = this->create_publisher<tracker_msgs::msg::DetectedObjectArray>(detected_objects_topic_, 10);
   tracking_init_pub_ = this->create_publisher<tracker_msgs::msg::TrackedObjectArray>(tracking_init_topic_, rclcpp::QoS(10).reliable());
 
+  param_subscriber_ = std::make_shared<rclcpp::ParameterEventHandler>(this);
+  auto cb = [this](const rclcpp::Parameter & p) {
+    apf_gain_ = p.as_double();
+    RCLCPP_INFO(
+      this->get_logger(), "Received an update to parameter \"%s\" of type %s: \"%.2f\"",
+      p.get_name().c_str(),
+      p.get_type_name().c_str(),
+      p.as_double());
+  };
+  apf_gain_param_cb_handle_ = param_subscriber_->add_parameter_callback("apf_gain", cb);
+
   RCLCPP_INFO(this->get_logger(),"Artificial potential field gain: [%.2f]", apf_gain_);
   RCLCPP_INFO(this->get_logger(),"Inter agent distance: [%.2f]", inter_agent_distance_);
   RCLCPP_INFO(this->get_logger(),"Activating node...");
