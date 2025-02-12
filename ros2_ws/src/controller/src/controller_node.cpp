@@ -94,10 +94,10 @@ void ControllerNode::tracked_objects_subscriber_callback(tracker_msgs::msg::Trac
   geometry_msgs::msg::Twist instructions_msg;
   instructions_msg.linear.x = control_input_x;
   instructions_msg.linear.y = control_input_y;
-  instructions_msg.linear.z = 0;
-  instructions_msg.angular.x = 0;
-  instructions_msg.angular.y = 0;
-  instructions_msg.angular.z = 0;
+  instructions_msg.linear.z = 0.0;
+  instructions_msg.angular.x = 0.0;
+  instructions_msg.angular.y = 0.0;
+  instructions_msg.angular.z = 0.0;
 
   instructions_pub_->publish(instructions_msg);
 }
