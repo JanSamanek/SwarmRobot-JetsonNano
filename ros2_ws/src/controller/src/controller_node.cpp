@@ -87,20 +87,6 @@ void ControllerNode::tracked_objects_subscriber_callback(tracker_msgs::msg::Trac
   auto control_input_x = 0.0;
   auto control_input_y = 0.0;
 
-  if(msg->tracked_objects.empty())
-  {
-    geometry_msgs::msg::Twist instructions_msg;
-    instructions_msg.linear.x = 0.0;
-    instructions_msg.linear.y = 0.0;
-    instructions_msg.linear.z = 0.0;
-    instructions_msg.angular.x = 0.0;
-    instructions_msg.angular.y = 0.0;
-    instructions_msg.angular.z = 0.0;
-    
-    instructions_pub_->publish(instructions_msg);
-    return;
-  }
-
   for(auto agent : msg->tracked_objects)
   {
     auto position = agent.position.point; 
