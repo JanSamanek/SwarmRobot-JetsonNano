@@ -107,7 +107,6 @@ void TrackerNode::detected_objects_subscriber_callback(tracker_msgs::msg::Detect
             if(tracked.disappeared_count > disappeared_threshold_)
             {
                 RCLCPP_ERROR(this->get_logger(), "Lost track of object [ID: %s]", tracked.id.c_str());
-                break;
             }
         }
 
