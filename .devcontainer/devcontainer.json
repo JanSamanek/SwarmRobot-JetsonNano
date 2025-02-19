@@ -9,12 +9,13 @@
   ],
   "customizations":{
     "vscode": {
-      "extensions": ["ms-vscode.cpptools", "ms-vscode.cmake-tools", "ms-python.python", "ms-iot.vscode-ros"]
+      "extensions": ["ms-vscode.cpptools-extension-pack", "ms-python.python", "ms-iot.vscode-ros", "ms-azuretools.vscode-docker"]
     }
   }, 
   "workspaceMount": "source=${localWorkspaceFolder},target=/${localWorkspaceFolderBasename},type=bind",
-  "workspaceFolder": "/${localWorkspaceFolderBasename}",
+  "workspaceFolder": "/${localWorkspaceFolderBasename}/ros2_ws",
   "mounts": [
     "source=${localEnv:HOME}${localEnv:USERPROFILE}/.bash_history,target=/home/vscode/.bash_history,type=bind"
-  ]
+  ],
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y nlohmann-json3-dev libeigen3-dev && sudo rosdep update && sudo rosdep install --from-paths src --ignore-src -y"
 }
