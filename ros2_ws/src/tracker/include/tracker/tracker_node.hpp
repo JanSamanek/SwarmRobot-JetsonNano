@@ -10,6 +10,7 @@
 #include "visualization_msgs/msg/marker_array.hpp"
 #include "tracker_msgs/msg/tracked_object_array.hpp"
 #include "tracker_msgs/msg/detected_object_array.hpp"
+#include "tracker_msgs/srv/init_tracking.hpp"
 
 #include "kalman_filter.hpp"
 
@@ -44,11 +45,12 @@ private:
     double measurement_frequency_;
     bool kalman_filtering_enabled_;
     
+    rclcpp::Service<tracker_msgs::srv::InitTracking>::SharedPtr tracker_init_service_;
+    void TrackerNode::tracking_init(const std::shared_ptr<tracker_msgs::srv::InitTracking::Request> request,
+                                        std::shared_ptr<tracker_msgs::srv::InitTracking::Response> response);
+
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr tracked_objects_viz_pub_;
     rclcpp::Publisher<tracker_msgs::msg::TrackedObjectArray>::SharedPtr tracked_objects_pub_;
-
-    rclcpp::Subscription<tracker_msgs::msg::TrackedObjectArray>::SharedPtr tracking_init_sub_;
-    void tracking_init_subscription_callabck(tracker_msgs::msg::TrackedObjectArray::SharedPtr msg);
 
     rclcpp::Subscription<tracker_msgs::msg::DetectedObjectArray>::SharedPtr detected_objects_sub_;
     void detected_objects_subscriber_callback(tracker_msgs::msg::DetectedObjectArray::SharedPtr msg);

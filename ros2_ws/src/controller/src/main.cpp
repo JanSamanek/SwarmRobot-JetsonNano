@@ -11,13 +11,6 @@ int main(int argc, char ** argv)
 {
   auto tracked_object_array_msg = load_tracking_init("tracking_init.json");
 
-  for(auto tracked : tracked_object_array_msg.tracked_objects)
-  {
-    RCLCPP_INFO(rclcpp::get_logger("rclcpp"), 
-    "Set to track: Object ID '%s' at position (x: %.2f, y: %.2f)",
-    tracked.object_id.c_str(), tracked.position.point.x, tracked.position.point.y);
-  }
-
   std::shared_ptr<rclcpp::Node> node = rclcpp::Node::make_shared("tracking_init_client");
   rclcpp::Client<tracker_msgs::srv::InitTracking>::SharedPtr client =
     node->create_client<tracker_msgs::srv::InitTracking>(TRACKING_INIT_TOPIC);
@@ -30,7 +23,7 @@ int main(int argc, char ** argv)
       RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the tracking init service. Exiting.");
       return 0;
     }
-    RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "tracking init service not available, waiting again...");
+    RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Tracking init service not available, waiting again...");
   }
   
   auto result = client->async_send_request(request);
@@ -40,12 +33,7 @@ int main(int argc, char ** argv)
   {
     if(result.get()->success)
     {
-      for(auto tracked : tracked_object_array_msg.tracked_objects)
-      {
-        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), 
-        "Set to track: Object ID '%s' at position (x: %.2f, y: %.2f)",
-        tracked.object_id.c_str(), tracked.position.point.x, tracked.position.point.y);
-      }
+      RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Succssfully send tracking initialization");
     }
   } else {
     RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to call service tracking init");

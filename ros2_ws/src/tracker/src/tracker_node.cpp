@@ -37,13 +37,13 @@ Node("tracker_node")
         RCLCPP_WARN(this->get_logger(), "Measurement frequency needed for kalman filtering not set");
     }
     
+    tracker_init_service_ = this->create_service<tracker_msgs::srv::InitTracking>(tracking_init_topic_, &tracking_init);
+
     tracked_objects_pub_ = this->create_publisher<tracker_msgs::msg::TrackedObjectArray>(tracked_objects_topic_, 10);
     tracked_objects_viz_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(tracked_objects_topic_+ "/visualization", 10);
 
     detected_objects_sub_ = this->create_subscription<tracker_msgs::msg::DetectedObjectArray>(
         detected_objects_topic_, 10, std::bind(&TrackerNode::detected_objects_subscriber_callback, this, _1)); 
-    tracking_init_sub_ = this->create_subscription<tracker_msgs::msg::TrackedObjectArray>(
-        tracking_init_topic_, rclcpp::QoS(10).reliable(), std::bind(&TrackerNode::tracking_init_subscription_callabck, this, _1));
 
     RCLCPP_INFO(this->get_logger(),"Distance threshold: [%.2f]", distance_threshold_);
     RCLCPP_INFO(this->get_logger(),"Disappeared threshold: [%d]", disappeared_threshold_);
@@ -51,11 +51,12 @@ Node("tracker_node")
     RCLCPP_INFO(this->get_logger(),"Activating node...");
 }
 
-void TrackerNode::tracking_init_subscription_callabck(tracker_msgs::msg::TrackedObjectArray::SharedPtr msg)
+void TrackerNode::tracking_init(const std::shared_ptr<tracker_msgs::srv::InitTracking::Request> request,
+                                    std::shared_ptr<tracker_msgs::srv::InitTracking::Response> response)
 {
     double dt = 1.0/measurement_frequency_;
     
-    for(auto tracked : msg->tracked_objects)
+    for(auto tracked : request->tracked_objects_init.tracked_objects)
     {
         Eigen::Vector3d centroid = std::to_eigen(tracked.position.point);
         tracked_objects_.push_back(TrackedObject(tracked.object_id, centroid,  KalmanFilter(centroid, dt), 0));
@@ -63,6 +64,7 @@ void TrackerNode::tracking_init_subscription_callabck(tracker_msgs::msg::Tracked
         "Started tracking: Object ID '%s' at position (x: %.2f, y: %.2f)", 
         tracked.object_id.c_str(), centroid.x(), centroid.y());
     }
+    response->success = true;
 }
 
 void TrackerNode::detected_objects_subscriber_callback(tracker_msgs::msg::DetectedObjectArray::SharedPtr msg)
