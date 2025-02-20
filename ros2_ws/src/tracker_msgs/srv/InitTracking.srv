@@ -1,0 +1,3 @@
+tracker_msgs/TrackedObjectArray tracked_objects_init
+---
+bool success

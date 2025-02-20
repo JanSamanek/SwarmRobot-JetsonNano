@@ -1,7 +1,11 @@
-[
-    {
-        "id": "swarm-bot-1",
-        "x": -1.0,
-        "y": 0.0
-    }
-]
+{
+    "frame_id": "laser", 
+    "tracked_objects":
+    [
+        {
+            "id": "swarm-bot-1",
+            "x": -1.0,
+            "y": 0.0
+        }
+    ]
+}

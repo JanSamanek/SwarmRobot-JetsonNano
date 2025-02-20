@@ -18,9 +18,13 @@ set(msg_files
   "msg/DetectedObjectArray.msg"
 )
 
+set(srv_files
+  "srv/InitTracking.srv"
+)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   ${msg_files}
+  ${srv_files}
   DEPENDENCIES geometry_msgs std_msgs
 )
 

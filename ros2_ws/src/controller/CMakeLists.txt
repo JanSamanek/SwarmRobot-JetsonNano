@@ -15,6 +15,7 @@ find_package(nlohmann_json REQUIRED)
 
 set(source
   src/controller_node.cpp
+  src/controller_utils.cpp
 )
 
 set(library_name ${PROJECT_NAME}_core)

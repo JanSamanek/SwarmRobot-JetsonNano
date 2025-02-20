@@ -1,5 +1,5 @@
-#ifndef UTILS_HPP
-#define UTILS_HPP
+#ifndef TRACKER_UTILS_HPP
+#define TRACKER_UTILS_HPP
 
 #include <Eigen/Dense>
 #include "geometry_msgs/msg/point.hpp"
