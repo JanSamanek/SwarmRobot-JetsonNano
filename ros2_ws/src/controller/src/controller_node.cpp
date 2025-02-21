@@ -98,7 +98,6 @@ void ControllerNode::tracked_objects_subscriber_callback(tracker_msgs::msg::Trac
 
     auto distance_vec_length = get_vector_length(distance_vec); 
 
-    // TODO: make it work for different lidar coordination setups
     control_input_x += -apf_gain_ * distance_vec.x / distance_vec_length * (1 - inter_agent_distance_ / distance_vec_length);
     control_input_y += apf_gain_ * distance_vec.y / distance_vec_length * (1 - inter_agent_distance_ / distance_vec_length);
   }
