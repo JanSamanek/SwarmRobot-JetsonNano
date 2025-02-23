@@ -30,7 +30,6 @@ ControllerNode::ControllerNode(): Node("controller_node")
   this->get_parameter<std::string>("detected_objects_topic", detected_objects_topic_);
   this->get_parameter<std::string>("tracked_objects_topic", tracked_objects_topic_);
 
-
   segment_array_sub_ = this->create_subscription<slg_msgs::msg::SegmentArray>(
     segments_topic_, 10, std::bind(&ControllerNode::segments_subscriber_callback, this, _1)); 
   tracked_objects_sub_ = this->create_subscription<tracker_msgs::msg::TrackedObjectArray>(

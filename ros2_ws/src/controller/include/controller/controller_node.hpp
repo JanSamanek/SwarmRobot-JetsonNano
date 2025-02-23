@@ -19,7 +19,6 @@ class ControllerNode : public rclcpp::Node
     std::string segments_topic_;
     std::string instructions_topic_;
     std::string detected_objects_topic_;
-    std::string tracking_init_topic_;
     std::string tracked_objects_topic_;
 
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr instructions_pub_;

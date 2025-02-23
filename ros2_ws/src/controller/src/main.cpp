@@ -20,8 +20,10 @@ int main(int argc, char ** argv)
   auto request = std::make_shared<tracker_msgs::srv::InitTracking::Request>();
   request->tracked_objects_init = tracked_object_array_msg;
 
-  while (!client->wait_for_service(1s)) {
-    if (!rclcpp::ok()) {
+  while (!client->wait_for_service(1s)) 
+  {
+    if (!rclcpp::ok()) 
+    {
       RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the tracking init service. Exiting.");
       return 0;
     }
@@ -30,14 +32,15 @@ int main(int argc, char ** argv)
   
   auto result = client->async_send_request(request);
 
-  if (rclcpp::spin_until_future_complete(node, result) ==
-    rclcpp::FutureReturnCode::SUCCESS)
+  if (rclcpp::spin_until_future_complete(node, result) == rclcpp::FutureReturnCode::SUCCESS)
   {
     if(result.get()->success)
     {
       RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Successfully send tracking initialization");
     }
-  } else {
+  } 
+  else 
+  {
     RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to call service tracking init");
   }
 
