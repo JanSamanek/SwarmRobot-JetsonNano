@@ -46,7 +46,7 @@ private:
     bool kalman_filtering_enabled_;
     
     rclcpp::Service<tracker_msgs::srv::InitTracking>::SharedPtr tracker_init_service_;
-    void TrackerNode::tracking_init(const std::shared_ptr<tracker_msgs::srv::InitTracking::Request> request,
+    void tracking_init(const std::shared_ptr<tracker_msgs::srv::InitTracking::Request> request,
                                         std::shared_ptr<tracker_msgs::srv::InitTracking::Response> response);
 
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr tracked_objects_viz_pub_;

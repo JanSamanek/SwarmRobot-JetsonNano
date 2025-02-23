@@ -12,6 +12,7 @@
 
 
 using std::placeholders::_1;
+using std::placeholders::_2;
 
 TrackerNode::TrackerNode() : 
 Node("tracker_node")
@@ -37,7 +38,8 @@ Node("tracker_node")
         RCLCPP_WARN(this->get_logger(), "Measurement frequency needed for kalman filtering not set");
     }
     
-    tracker_init_service_ = this->create_service<tracker_msgs::srv::InitTracking>(tracking_init_topic_, &tracking_init);
+    tracker_init_service_ = this->create_service<tracker_msgs::srv::InitTracking>(tracking_init_topic_, 
+        std::bind(&TrackerNode::tracking_init, this, _1, _2));
 
     tracked_objects_pub_ = this->create_publisher<tracker_msgs::msg::TrackedObjectArray>(tracked_objects_topic_, 10);
     tracked_objects_viz_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(tracked_objects_topic_+ "/visualization", 10);

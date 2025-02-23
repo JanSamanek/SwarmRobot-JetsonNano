@@ -54,8 +54,6 @@ ControllerNode::ControllerNode(): Node("controller_node")
   RCLCPP_INFO(this->get_logger(),"Artificial potential field gain: [%.2f]", apf_gain_);
   RCLCPP_INFO(this->get_logger(),"Inter agent distance: [%.2f]", inter_agent_distance_);
   RCLCPP_INFO(this->get_logger(),"Activating node...");
-
-  initialize_tracking(); 
 }
 
 void ControllerNode::segments_subscriber_callback(slg_msgs::msg::SegmentArray::SharedPtr msg)
