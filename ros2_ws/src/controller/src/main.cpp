@@ -9,6 +9,8 @@ using namespace std::chrono_literals;
 
 int main(int argc, char ** argv)
 {
+  rclcpp::init(argc, argv);
+
   auto tracked_object_array_msg = load_tracking_init("tracking_init.json");
 
   std::shared_ptr<rclcpp::Node> node = rclcpp::Node::make_shared("tracking_init_client");
@@ -33,13 +35,12 @@ int main(int argc, char ** argv)
   {
     if(result.get()->success)
     {
-      RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Succssfully send tracking initialization");
+      RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Successfully send tracking initialization");
     }
   } else {
     RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to call service tracking init");
   }
 
-  rclcpp::init(argc, argv);
   rclcpp::spin(std::make_shared<ControllerNode>());
   rclcpp::shutdown();
 

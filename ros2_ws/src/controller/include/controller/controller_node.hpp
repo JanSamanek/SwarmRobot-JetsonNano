@@ -24,7 +24,6 @@ class ControllerNode : public rclcpp::Node
 
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr instructions_pub_;
     rclcpp::Publisher<tracker_msgs::msg::DetectedObjectArray>::SharedPtr detected_objects_pub_;
-    rclcpp::Publisher<tracker_msgs::msg::TrackedObjectArray>::SharedPtr tracking_init_pub_;
 
     rclcpp::Subscription<slg_msgs::msg::SegmentArray>::SharedPtr segment_array_sub_;
     void segments_subscriber_callback(slg_msgs::msg::SegmentArray::SharedPtr msg);
