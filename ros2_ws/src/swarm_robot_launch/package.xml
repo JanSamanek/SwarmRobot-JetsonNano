@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>swarm_robot_launch</name>
+  <version>0.0.1</version>
+  <description>laucnhes the whole swarm robot ecosystem</description>
+  <maintainer email="jan.d.samanek@gmail.com">ubuntu</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>controller</exec_depend>
+  <exec_depend>tracker</exec_depend>
+  <exec_depend>rplidar_ros</exec_depend>
+  <exec_depend>laser_segmentation</exec_depend>
+
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
