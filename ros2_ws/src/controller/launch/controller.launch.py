@@ -16,7 +16,7 @@ def generate_launch_description():
     declare_params_file_arg = DeclareLaunchArgument(
         'params_file',
         default_value=config,
-        description='Full path to the ROS2 parameters file with tracker configuration'
+        description='Full path to the ROS2 parameters file with controller configuration'
     )
 
     controller_node = Node(
