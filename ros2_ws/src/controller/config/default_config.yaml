@@ -1,6 +1,6 @@
 controller:
   ros__parameters:
-    apf_gain: 0.8
+    apf_gain: 3.35
     inter_agent_distance: 0.5
     segments_topic: segments
     instructions_topic: instructions
