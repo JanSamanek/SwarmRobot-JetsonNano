@@ -84,8 +84,12 @@ void ControllerNode::segments_subscriber_callback(slg_msgs::msg::SegmentArray::S
 
 void ControllerNode::tracked_objects_subscriber_callback(tracker_msgs::msg::TrackedObjectArray::SharedPtr msg)
 {
-  auto control_input_x = 0.0;
-  auto control_input_y = 0.0;
+  double control_input_x = 0.0, control_input_y = 0.0;
+  static double filtered_x = 0.0, filtered_y = 0.0;
+ 
+  // TODO: make parameters
+  double alpha = 0.8;
+  double force_threshold = 0.15;
 
   for(auto agent : msg->tracked_objects)
   {
@@ -101,6 +105,17 @@ void ControllerNode::tracked_objects_subscriber_callback(tracker_msgs::msg::Trac
     control_input_x += -apf_gain_ * distance_vec.x / distance_vec_length * (1 - inter_agent_distance_ / distance_vec_length);
     control_input_y += apf_gain_ * distance_vec.y / distance_vec_length * (1 - inter_agent_distance_ / distance_vec_length);
   }
+
+
+  filtered_x = alpha * filtered_x + (1 - alpha) * control_input_x;
+  filtered_y = alpha * filtered_y + (1 - alpha) * control_input_y;
+
+  control_input_x = filtered_x;
+  control_input_y = filtered_y;
+
+  if (std::abs(control_input_x) < force_threshold) control_input_x = 0.0;
+  if (std::abs(control_input_y) < force_threshold) control_input_y = 0.0;
+
 
   geometry_msgs::msg::Twist instructions_msg;
   instructions_msg.linear.x = control_input_x;
