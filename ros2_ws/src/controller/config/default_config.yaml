@@ -1,10 +1,10 @@
 controller:
   ros__parameters:
-    alpha: 0.8
-    control_input_threshold: 0.5
+    alpha: 0.35
+    deadzone_threshold: 0.5
     low_pass_filter_enabled: true
     deadzone_enabled: true
-    apf_gain: 3.35
+    apf_gain: 4.35
     inter_agent_distance: 0.5
     tracked_frame_id: laser
     segments_topic: segments

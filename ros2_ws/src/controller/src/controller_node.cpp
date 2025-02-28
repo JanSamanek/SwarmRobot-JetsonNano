@@ -59,6 +59,7 @@ ControllerNode::ControllerNode(): Node("controller_node")
   tracking_init_pub_ = this->create_publisher<tracker_msgs::msg::TrackedObjectArray>(tracking_init_topic_, rclcpp::QoS(10).reliable());
 
   param_subscriber_ = std::make_shared<rclcpp::ParameterEventHandler>(this);
+  
   auto apf_gain_cb = [this](const rclcpp::Parameter & p) {
     apf_gain_ = p.as_double();
     RCLCPP_INFO(
