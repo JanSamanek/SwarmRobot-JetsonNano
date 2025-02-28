@@ -13,6 +13,10 @@ class ControllerNode : public rclcpp::Node
     ControllerNode();
 
   private:
+    double alpha_;
+    double deadzone_threshold_;
+    bool low_pass_filter_enabled_;
+    bool deadzone_enabled_;
     double apf_gain_;
     double inter_agent_distance_;
     std::string tracked_frame_id_;
@@ -33,7 +37,10 @@ class ControllerNode : public rclcpp::Node
     void tracked_objects_subscriber_callback(tracker_msgs::msg::TrackedObjectArray::SharedPtr msg);
 
     std::shared_ptr<rclcpp::ParameterEventHandler> param_subscriber_;
-    std::shared_ptr<rclcpp::ParameterCallbackHandle> apf_gain_param_cb_handle_;
+    std::shared_ptr<rclcpp::ParameterCallbackHandle> apf_gain_cb_handle_;
+    std::shared_ptr<rclcpp::ParameterCallbackHandle> deadzone_threshold_cb_handle_;
+    std::shared_ptr<rclcpp::ParameterCallbackHandle> alpha_cb_handle_;
+
 
     tracker_msgs::msg::TrackedObjectArray load_tracking_init_msg(std::string tracking_config_file);
     void initialize_tracking();
