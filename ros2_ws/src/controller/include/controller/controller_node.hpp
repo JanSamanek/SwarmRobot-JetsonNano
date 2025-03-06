@@ -14,7 +14,7 @@ class ControllerNode : public rclcpp::Node
 
   private:
     double alpha_;
-    double deadzone_threshold_;
+    double deadzone;
     bool low_pass_filter_enabled_;
     bool deadzone_enabled_;
     double apf_gain_;
@@ -38,7 +38,7 @@ class ControllerNode : public rclcpp::Node
 
     std::shared_ptr<rclcpp::ParameterEventHandler> param_subscriber_;
     std::shared_ptr<rclcpp::ParameterCallbackHandle> apf_gain_cb_handle_;
-    std::shared_ptr<rclcpp::ParameterCallbackHandle> deadzone_threshold_cb_handle_;
+    std::shared_ptr<rclcpp::ParameterCallbackHandle> deadzone_cb_handle_;
     std::shared_ptr<rclcpp::ParameterCallbackHandle> alpha_cb_handle_;
 
 

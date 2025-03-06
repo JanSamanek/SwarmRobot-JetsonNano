@@ -1,7 +1,7 @@
 controller:
   ros__parameters:
     alpha: 0.35
-    deadzone_threshold: 0.5
+    deadzone: 0.1
     low_pass_filter_enabled: true
     deadzone_enabled: true
     apf_gain: 4.35

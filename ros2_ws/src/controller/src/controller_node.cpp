@@ -25,7 +25,7 @@ ControllerNode::ControllerNode(): Node("controller_node")
   this->declare_parameter<bool>("low_pass_filter_enabled", true);
   this->declare_parameter<double>("alpha", 0.8);
   this->declare_parameter<bool>("deadzone_enabled", true);
-  this->declare_parameter<double>("deadzone_threshold", 0.5);
+  this->declare_parameter<double>("deadzone", 0.05);
   this->declare_parameter<double>("apf_gain", 0.4);
   this->declare_parameter<double>("inter_agent_distance", 0.5);
   this->declare_parameter<std::string>("tracked_frame_id", "laser");
@@ -38,7 +38,7 @@ ControllerNode::ControllerNode(): Node("controller_node")
   this->get_parameter<bool>("low_pass_filter_enabled", low_pass_filter_enabled_);
   this->get_parameter<double>("alpha", alpha_);
   this->get_parameter<bool>("deadzone_enabled", deadzone_enabled_);
-  this->get_parameter<double>("deadzone_threshold", deadzone_threshold_);
+  this->get_parameter<double>("deadzone", deadzone);
   this->get_parameter<double>("apf_gain", apf_gain_);
   this->get_parameter<double>("inter_agent_distance", inter_agent_distance_);
   this->get_parameter<std::string>("tracked_frame_id", tracked_frame_id_);
@@ -59,7 +59,7 @@ ControllerNode::ControllerNode(): Node("controller_node")
   tracking_init_pub_ = this->create_publisher<tracker_msgs::msg::TrackedObjectArray>(tracking_init_topic_, rclcpp::QoS(10).reliable());
 
   param_subscriber_ = std::make_shared<rclcpp::ParameterEventHandler>(this);
-  
+
   auto apf_gain_cb = [this](const rclcpp::Parameter & p) {
     apf_gain_ = p.as_double();
     RCLCPP_INFO(
@@ -80,15 +80,15 @@ ControllerNode::ControllerNode(): Node("controller_node")
   };
   alpha_cb_handle_ = param_subscriber_->add_parameter_callback("alpha", alpha_cb);
 
-  auto deadzone_threshold_cb = [this](const rclcpp::Parameter & p) {
-    deadzone_threshold_ = p.as_double();
+  auto deadzone_cb = [this](const rclcpp::Parameter & p) {
+    deadzone = p.as_double();
     RCLCPP_INFO(
       this->get_logger(), "Received an update to parameter \"%s\" of type %s: \"%.2f\"",
       p.get_name().c_str(),
       p.get_type_name().c_str(),
       p.as_double());
   };
-  deadzone_threshold_cb_handle_ = param_subscriber_->add_parameter_callback("deadzone_threshold", deadzone_threshold_cb);
+  deadzone_cb_handle_ = param_subscriber_->add_parameter_callback("deadzone", deadzone_cb);
 
   RCLCPP_INFO(this->get_logger(),"Artificial potential field gain: [%.2f]", apf_gain_);
   RCLCPP_INFO(this->get_logger(),"Inter agent distance: [%.2f]", inter_agent_distance_);
@@ -125,10 +125,18 @@ void ControllerNode::tracked_objects_subscriber_callback(tracker_msgs::msg::Trac
     distance_vec.y = position.y;
     distance_vec.z = position.z;
 
-    auto distance_vec_length = get_vector_length(distance_vec); 
+    auto distance = get_vector_length(distance_vec); 
 
-    control_input_x += -apf_gain_ * distance_vec.x / distance_vec_length * (1 - inter_agent_distance_ / distance_vec_length);
-    control_input_y += apf_gain_ * distance_vec.y / distance_vec_length * (1 - inter_agent_distance_ / distance_vec_length);
+    if(deadzone_enabled_)
+    {
+      if((inter_agent_distance_ - deadzone / 2  < distance) && (inter_agent_distance_ + deadzone / 2  > distance))
+
+      continue;
+    }
+
+    control_input_x += -apf_gain_ * distance_vec.x / distance * (1 - inter_agent_distance_ / distance);
+    control_input_y += apf_gain_ * distance_vec.y / distance * (1 - inter_agent_distance_ / distance);
+
   }
 
   if(low_pass_filter_enabled_)
@@ -140,11 +148,6 @@ void ControllerNode::tracked_objects_subscriber_callback(tracker_msgs::msg::Trac
     control_input_y = filtered_y;
   }
 
-  if(deadzone_enabled_)
-  {
-    if (std::abs(control_input_x) < deadzone_threshold_) control_input_x = 0.0;
-    if (std::abs(control_input_y) < deadzone_threshold_) control_input_y = 0.0;
-  }
 
   geometry_msgs::msg::Twist instructions_msg;
   instructions_msg.linear.x = control_input_x;
