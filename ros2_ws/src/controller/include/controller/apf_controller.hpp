@@ -2,6 +2,7 @@
 #define APF_CONTROLLER_H
 
 #include "tracker_msgs/msg/tracked_object_array.hpp"
+#include "geometry_msgs/msg/vector3.hpp"
 #include <tuple>
 
 class APFController
