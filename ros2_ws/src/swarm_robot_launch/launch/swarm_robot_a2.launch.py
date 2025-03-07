@@ -9,7 +9,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     
     odometry_node = Node(
-        package='simple_2d_lidar_odometry',
+        package='lidar_odometry',
         executable='lidar_odometry_node',
         name='lidar_odometry_node',
         output='screen',

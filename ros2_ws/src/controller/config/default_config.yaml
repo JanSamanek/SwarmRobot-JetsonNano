@@ -6,6 +6,9 @@ controller:
     deadzone_enabled: true
     apf_gain: 4.35
     inter_agent_distance: 0.5
+    pid_p_gain: 0.05
+    pid_i_gain: 0.0
+    pid_d_gain: 0.0
     tracked_frame_id: laser
     segments_topic: segments
     instructions_topic: instructions
@@ -13,6 +16,3 @@ controller:
     tracking_init_topic: tracking_init
     tracked_objects_topic: tracked_objects
     odometry_topic: scan_odom
-    pid_p_gain: 1.0
-    pid_i_gain: 0.0
-    pid_d_gain: 0.0
