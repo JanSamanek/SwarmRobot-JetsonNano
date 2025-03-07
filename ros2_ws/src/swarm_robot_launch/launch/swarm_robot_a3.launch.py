@@ -7,6 +7,14 @@ from launch.actions import TimerAction
 from launch_ros.actions import Node
 
 def generate_launch_description():
+        
+    odometry_node = Node(
+        package='simple_2d_lidar_odometry',
+        executable='lidar_odometry_node',
+        name='lidar_odometry_node',
+        output='screen',
+    )
+
     segmentation_launch_file = PythonLaunchDescriptionSource([os.path.join(
             get_package_share_directory('laser_segmentation'), 'launch/'),
             'segmentation.launch.py']) 
@@ -38,6 +46,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         lidar_node,
+        odometry_node,
         segmentation_node,
         tracker_node,
         controller_node

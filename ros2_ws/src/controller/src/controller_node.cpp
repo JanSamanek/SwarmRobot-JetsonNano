@@ -12,8 +12,19 @@
 #include <fstream>
 #include <iostream>
 
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp" 
+
 using json = nlohmann::json;
 using std::placeholders::_1;
+
+static double get_yaw_from_quaternion(const geometry_msgs::msg::Quaternion &quat)
+{
+  tf2::Quaternion q(quat.x, quat.y, quat.z, quat.w);
+  tf2::Matrix3x3 m(q);
+  double roll, pitch, yaw;
+  m.getRPY(roll, pitch, yaw);
+  return yaw;
+}
 
 static double get_vector_length(geometry_msgs::msg::Vector3 vec)
 {
@@ -22,18 +33,19 @@ static double get_vector_length(geometry_msgs::msg::Vector3 vec)
 
 ControllerNode::ControllerNode(): Node("controller_node")
 {
+  instructions_msg_.linear.x = 0.0;
+  instructions_msg_.linear.y = 0.0;
+  instructions_msg_.linear.z = 0.0;
+  instructions_msg_.angular.x = 0.0;
+  instructions_msg_.angular.y = 0.0;
+  instructions_msg_.angular.z = 0.0;
+
   this->declare_parameter<bool>("low_pass_filter_enabled", true);
   this->declare_parameter<double>("alpha", 0.8);
   this->declare_parameter<bool>("deadzone_enabled", true);
   this->declare_parameter<double>("deadzone", 0.05);
   this->declare_parameter<double>("apf_gain", 0.4);
   this->declare_parameter<double>("inter_agent_distance", 0.5);
-  this->declare_parameter<std::string>("tracked_frame_id", "laser");
-  this->declare_parameter<std::string>("segments_topic", "segments");
-  this->declare_parameter<std::string>("instructions_topic", "instructions");
-  this->declare_parameter<std::string>("detected_objects_topic", "detected_objects");
-  this->declare_parameter<std::string>("tracking_init_topic", "tracked_objects_init");
-  this->declare_parameter<std::string>("tracked_objects_topic", "tracked_objects");
 
   this->get_parameter<bool>("low_pass_filter_enabled", low_pass_filter_enabled_);
   this->get_parameter<double>("alpha", alpha_);
@@ -41,22 +53,36 @@ ControllerNode::ControllerNode(): Node("controller_node")
   this->get_parameter<double>("deadzone", deadzone);
   this->get_parameter<double>("apf_gain", apf_gain_);
   this->get_parameter<double>("inter_agent_distance", inter_agent_distance_);
+
+
+  this->declare_parameter<std::string>("tracked_frame_id", "laser");
+  this->declare_parameter<std::string>("segments_topic", "segments");
+  this->declare_parameter<std::string>("instructions_topic", "instructions");
+  this->declare_parameter<std::string>("detected_objects_topic", "detected_objects");
+  this->declare_parameter<std::string>("tracking_init_topic", "tracked_objects_init");
+  this->declare_parameter<std::string>("tracked_objects_topic", "tracked_objects");
+  this->declare_parameter<std::string>("odometry_topic", "scan_odom");
+
   this->get_parameter<std::string>("tracked_frame_id", tracked_frame_id_);
   this->get_parameter<std::string>("segments_topic", segments_topic_);
   this->get_parameter<std::string>("instructions_topic", instructions_topic_);
   this->get_parameter<std::string>("detected_objects_topic", detected_objects_topic_);
   this->get_parameter<std::string>("tracking_init_topic", tracking_init_topic_);
   this->get_parameter<std::string>("tracked_objects_topic", tracked_objects_topic_);
-
+  this->get_parameter<std::string>("odometry_topic", odometry_topic_);
 
   segment_array_sub_ = this->create_subscription<slg_msgs::msg::SegmentArray>(
     segments_topic_, 10, std::bind(&ControllerNode::segments_subscriber_callback, this, _1)); 
   tracked_objects_sub_ = this->create_subscription<tracker_msgs::msg::TrackedObjectArray>(
     tracked_objects_topic_, 10, std::bind(&ControllerNode::tracked_objects_subscriber_callback, this, _1));
+  odometry_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
+    odometry_topic_, 10, std::bind(&ControllerNode::odometry_subscriber_callback, this, _1));
 
   instructions_pub_ = this->create_publisher<geometry_msgs::msg::Twist>(instructions_topic_, 10);
   detected_objects_pub_ = this->create_publisher<tracker_msgs::msg::DetectedObjectArray>(detected_objects_topic_, 10);
   tracking_init_pub_ = this->create_publisher<tracker_msgs::msg::TrackedObjectArray>(tracking_init_topic_, rclcpp::QoS(10).reliable());
+  
+  pid_controller_ = std::make_unique<PIDController>(0.0, 0.0, 0.0); // TODO: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   param_subscriber_ = std::make_shared<rclcpp::ParameterEventHandler>(this);
 
@@ -113,6 +139,7 @@ void ControllerNode::segments_subscriber_callback(slg_msgs::msg::SegmentArray::S
 
 void ControllerNode::tracked_objects_subscriber_callback(tracker_msgs::msg::TrackedObjectArray::SharedPtr msg)
 {
+  // ***** apf gain ***** //
   double control_input_x = 0.0, control_input_y = 0.0;
   static double filtered_x = 0.0, filtered_y = 0.0;
 
@@ -130,8 +157,7 @@ void ControllerNode::tracked_objects_subscriber_callback(tracker_msgs::msg::Trac
     if(deadzone_enabled_)
     {
       if((inter_agent_distance_ - deadzone / 2  < distance) && (inter_agent_distance_ + deadzone / 2  > distance))
-
-      continue;
+        continue;
     }
 
     control_input_x += -apf_gain_ * distance_vec.x / distance * (1 - inter_agent_distance_ / distance);
@@ -148,16 +174,32 @@ void ControllerNode::tracked_objects_subscriber_callback(tracker_msgs::msg::Trac
     control_input_y = filtered_y;
   }
 
+  // ***** send message ***** //
 
-  geometry_msgs::msg::Twist instructions_msg;
-  instructions_msg.linear.x = control_input_x;
-  instructions_msg.linear.y = control_input_y;
-  instructions_msg.linear.z = 0.0;
-  instructions_msg.angular.x = 0.0;
-  instructions_msg.angular.y = 0.0;
-  instructions_msg.angular.z = 0.0;
+  instructions_msg_.linear.x = control_input_x;
+  instructions_msg_.linear.y = control_input_y;
 
-  instructions_pub_->publish(instructions_msg);
+  instructions_pub_->publish(instructions_msg_);
+}
+
+void ControllerNode::odometry_subscriber_callback(nav_msgs::msg::Odometry::SharedPtr msg)
+{
+  static double robot_yaw = 0.0;
+  double desired_angle = 0.0;
+  
+  double delta_yaw = get_yaw_from_quaternion(msg->pose.pose.orientation);
+  robot_yaw += delta_yaw;
+
+  double angular_error = desired_angle - robot_yaw;
+
+  if (angular_error > M_PI)
+    angular_error -= 2.0 * M_PI;
+  else if (angular_error < -M_PI)
+    angular_error += 2.0 * M_PI;
+
+  double angular_velocity = pid_controller_->compute(angular_error);
+
+  instructions_msg_.angular.z = angular_velocity;
 }
 
 tracker_msgs::msg::TrackedObjectArray ControllerNode::load_tracking_init_msg(std::string tracking_config_file)

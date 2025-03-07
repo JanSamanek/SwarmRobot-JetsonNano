@@ -6,6 +6,9 @@
 #include "slg_msgs/msg/segment_array.hpp"
 #include "tracker_msgs/msg/detected_object_array.hpp"
 #include "tracker_msgs/msg/tracked_object_array.hpp"
+#include "nav_msgs/msg/odometry.hpp"
+
+#include "pid_controller.hpp"
 
 class ControllerNode : public rclcpp::Node
 {
@@ -19,12 +22,16 @@ class ControllerNode : public rclcpp::Node
     bool deadzone_enabled_;
     double apf_gain_;
     double inter_agent_distance_;
+
     std::string tracked_frame_id_;
     std::string segments_topic_;
     std::string instructions_topic_;
     std::string detected_objects_topic_;
     std::string tracking_init_topic_;
     std::string tracked_objects_topic_;
+    std::string odometry_topic_;
+
+    geometry_msgs::msg::Twist instructions_msg_;
 
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr instructions_pub_;
     rclcpp::Publisher<tracker_msgs::msg::DetectedObjectArray>::SharedPtr detected_objects_pub_;
@@ -36,11 +43,14 @@ class ControllerNode : public rclcpp::Node
     rclcpp::Subscription<tracker_msgs::msg::TrackedObjectArray>::SharedPtr tracked_objects_sub_;
     void tracked_objects_subscriber_callback(tracker_msgs::msg::TrackedObjectArray::SharedPtr msg);
 
+    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry_sub_;
+    void odometry_subscriber_callback(nav_msgs::msg::Odometry::SharedPtr msg);
+
+    std::unique_ptr<PIDController> pid_controller_;
     std::shared_ptr<rclcpp::ParameterEventHandler> param_subscriber_;
     std::shared_ptr<rclcpp::ParameterCallbackHandle> apf_gain_cb_handle_;
     std::shared_ptr<rclcpp::ParameterCallbackHandle> deadzone_cb_handle_;
     std::shared_ptr<rclcpp::ParameterCallbackHandle> alpha_cb_handle_;
-
 
     tracker_msgs::msg::TrackedObjectArray load_tracking_init_msg(std::string tracking_config_file);
     void initialize_tracking();

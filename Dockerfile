@@ -8,6 +8,7 @@ python3-rosdep \
 build-essential \
 nlohmann-json3-dev \
 libeigen3-dev \
+libpcl-dev \
 git \
 && rm -rf /var/lib/apt/lists/* 
 
@@ -31,7 +32,8 @@ WORKDIR /ros2_ws
 
 RUN cd src/ && \
     git clone https://github.com/Slamtec/rplidar_ros.git -b ros2 && \
-    git clone https://github.com/ajtudela/laser_segmentation.git
+    git clone https://github.com/ajtudela/laser_segmentation.git && \
+    git clone https://github.com/dawan0111/Simple-2D-LiDAR-Odometry.git
 
 COPY ros2_ws/src ./src
 COPY entrypoint.sh ./entrypoint.sh
@@ -41,7 +43,7 @@ USER $USERNAME
 RUN sudo apt-get update && \
     source /opt/ros/humble/setup.bash && \
     rosdep update && \
-    rosdep install --from-paths src --ignore-src -r --rosdistro humble -y
+    rosdep install --from-paths src --ignore-src -r --rosdistro humble -y --skip-keys PCL --skip-keys Eigen3
 
 USER root
 RUN apt-get update && \
