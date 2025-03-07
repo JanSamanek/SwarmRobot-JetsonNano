@@ -19,7 +19,8 @@ find_package(tf2_geometry_msgs REQUIRED)
 set(source
   src/controller_node.cpp
   src/pid_controller.cpp
-  src/controller.cpp
+  src/apf_controller.cpp
+  src/controller_utils.cpp
 )
 
 set(library_name ${PROJECT_NAME}_core)

@@ -1,4 +1,5 @@
 #include "controller_node.hpp"
+#include "controller_utils.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/twist.hpp"
@@ -12,24 +13,9 @@
 #include <fstream>
 #include <iostream>
 
-#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp" 
 
 using json = nlohmann::json;
 using std::placeholders::_1;
-
-static double get_yaw_from_quaternion(const geometry_msgs::msg::Quaternion &quat)
-{
-  tf2::Quaternion q(quat.x, quat.y, quat.z, quat.w);
-  tf2::Matrix3x3 m(q);
-  double roll, pitch, yaw;
-  m.getRPY(roll, pitch, yaw);
-  return yaw;
-}
-
-static double get_vector_length(geometry_msgs::msg::Vector3 vec)
-{
-  return sqrt(pow(vec.x, 2) + pow(vec.y, 2) + pow(vec.z, 2));
-}
 
 ControllerNode::ControllerNode(): Node("controller_node")
 {
@@ -39,6 +25,15 @@ ControllerNode::ControllerNode(): Node("controller_node")
   instructions_msg_.angular.x = 0.0;
   instructions_msg_.angular.y = 0.0;
   instructions_msg_.angular.z = 0.0;
+
+  this->declare_parameter<double>("pid_p_gain", 1.0);
+  this->declare_parameter<double>("pid_i_gain", 0.0);
+  this->declare_parameter<double>("pid_d_gain", 0.0);
+
+  this->get_parameter<double>("pid_p_gain", pid_p_gain_);
+  this->get_parameter<double>("pid_i_gain", pid_i_gain_);
+  this->get_parameter<double>("pid_d_gain", pid_d_gain_);
+
 
   this->declare_parameter<bool>("low_pass_filter_enabled", true);
   this->declare_parameter<double>("alpha", 0.8);
@@ -50,7 +45,7 @@ ControllerNode::ControllerNode(): Node("controller_node")
   this->get_parameter<bool>("low_pass_filter_enabled", low_pass_filter_enabled_);
   this->get_parameter<double>("alpha", alpha_);
   this->get_parameter<bool>("deadzone_enabled", deadzone_enabled_);
-  this->get_parameter<double>("deadzone", deadzone);
+  this->get_parameter<double>("deadzone", deadzone_);
   this->get_parameter<double>("apf_gain", apf_gain_);
   this->get_parameter<double>("inter_agent_distance", inter_agent_distance_);
 
@@ -82,12 +77,16 @@ ControllerNode::ControllerNode(): Node("controller_node")
   detected_objects_pub_ = this->create_publisher<tracker_msgs::msg::DetectedObjectArray>(detected_objects_topic_, 10);
   tracking_init_pub_ = this->create_publisher<tracker_msgs::msg::TrackedObjectArray>(tracking_init_topic_, rclcpp::QoS(10).reliable());
   
-  pid_controller_ = std::make_unique<PIDController>(0.0, 0.0, 0.0); // TODO: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  pid_controller_ = std::make_unique<PIDController>(pid_p_gain_, pid_i_gain_, pid_d_gain_);
+  apf_controller_ = std::make_unique<APFController>(alpha_, deadzone_, low_pass_filter_enabled_, 
+    deadzone_enabled_, apf_gain_, inter_agent_distance_);
 
   param_subscriber_ = std::make_shared<rclcpp::ParameterEventHandler>(this);
 
   auto apf_gain_cb = [this](const rclcpp::Parameter & p) {
     apf_gain_ = p.as_double();
+    apf_controller_ = std::make_unique<APFController>(alpha_, deadzone_, low_pass_filter_enabled_, 
+      deadzone_enabled_, apf_gain_, inter_agent_distance_);
     RCLCPP_INFO(
       this->get_logger(), "Received an update to parameter \"%s\" of type %s: \"%.2f\"",
       p.get_name().c_str(),
@@ -98,6 +97,8 @@ ControllerNode::ControllerNode(): Node("controller_node")
 
   auto alpha_cb = [this](const rclcpp::Parameter & p) {
     alpha_ = p.as_double();
+    apf_controller_ = std::make_unique<APFController>(alpha_, deadzone_, low_pass_filter_enabled_, 
+      deadzone_enabled_, apf_gain_, inter_agent_distance_);
     RCLCPP_INFO(
       this->get_logger(), "Received an update to parameter \"%s\" of type %s: \"%.2f\"",
       p.get_name().c_str(),
@@ -107,7 +108,9 @@ ControllerNode::ControllerNode(): Node("controller_node")
   alpha_cb_handle_ = param_subscriber_->add_parameter_callback("alpha", alpha_cb);
 
   auto deadzone_cb = [this](const rclcpp::Parameter & p) {
-    deadzone = p.as_double();
+    deadzone_ = p.as_double();
+    apf_controller_ = std::make_unique<APFController>(alpha_, deadzone_, low_pass_filter_enabled_, 
+      deadzone_enabled_, apf_gain_, inter_agent_distance_);
     RCLCPP_INFO(
       this->get_logger(), "Received an update to parameter \"%s\" of type %s: \"%.2f\"",
       p.get_name().c_str(),
@@ -116,8 +119,47 @@ ControllerNode::ControllerNode(): Node("controller_node")
   };
   deadzone_cb_handle_ = param_subscriber_->add_parameter_callback("deadzone", deadzone_cb);
 
+  auto pid_p_gain_cb_ = [this](const rclcpp::Parameter & p) {
+    pid_p_gain_ = p.as_double();
+    pid_controller_ = std::make_unique<PIDController>(pid_p_gain_, pid_i_gain_, pid_d_gain_);
+
+    RCLCPP_INFO(
+      this->get_logger(), "Received an update to parameter \"%s\" of type %s: \"%.2f\"",
+      p.get_name().c_str(),
+      p.get_type_name().c_str(),
+      p.as_double());
+  };
+  pid_p_gain_cb_handle_ = param_subscriber_->add_parameter_callback("pid_p_gain", pid_p_gain_cb_);
+
+  auto pid_i_gain_cb = [this](const rclcpp::Parameter & p) {
+    pid_i_gain_ = p.as_double();
+    pid_controller_ = std::make_unique<PIDController>(pid_p_gain_, pid_i_gain_, pid_d_gain_);
+
+    RCLCPP_INFO(
+      this->get_logger(), "Received an update to parameter \"%s\" of type %s: \"%.2f\"",
+      p.get_name().c_str(),
+      p.get_type_name().c_str(),
+      p.as_double());
+  };
+  pid_i_gain_cb_handle_ = param_subscriber_->add_parameter_callback("pid_i_gain", pid_i_gain_cb);
+
+  auto pid_d_gain_cb = [this](const rclcpp::Parameter & p) {
+    pid_d_gain_ = p.as_double();
+    pid_controller_ = std::make_unique<PIDController>(pid_p_gain_, pid_i_gain_, pid_d_gain_);
+
+    RCLCPP_INFO(
+      this->get_logger(), "Received an update to parameter \"%s\" of type %s: \"%.2f\"",
+      p.get_name().c_str(),
+      p.get_type_name().c_str(),
+      p.as_double());
+  };
+  pid_d_gain_cb_handle_ = param_subscriber_->add_parameter_callback("pid_d_gain", pid_d_gain_cb);
+
   RCLCPP_INFO(this->get_logger(),"Artificial potential field gain: [%.2f]", apf_gain_);
   RCLCPP_INFO(this->get_logger(),"Inter agent distance: [%.2f]", inter_agent_distance_);
+  RCLCPP_INFO(this->get_logger(),"Deadzone: [%.2f] [%s]", deadzone_, deadzone_enabled_ ? "enabled" : "disabled");
+  RCLCPP_INFO(this->get_logger(),"Low pass filter alpha [%.2f] [%s]", alpha_, low_pass_filter_enabled_ ? "enabled" : "disabled");
+  RCLCPP_INFO(this->get_logger(),"Angular PID controller gains P:[%.2f] I:[%.2f] D: [%.2f]", pid_p_gain_, pid_i_gain_, pid_d_gain_);
   RCLCPP_INFO(this->get_logger(),"Activating node...");
 
   initialize_tracking(); 
@@ -139,42 +181,7 @@ void ControllerNode::segments_subscriber_callback(slg_msgs::msg::SegmentArray::S
 
 void ControllerNode::tracked_objects_subscriber_callback(tracker_msgs::msg::TrackedObjectArray::SharedPtr msg)
 {
-  // ***** apf gain ***** //
-  double control_input_x = 0.0, control_input_y = 0.0;
-  static double filtered_x = 0.0, filtered_y = 0.0;
-
-  for(auto agent : msg->tracked_objects)
-  {
-    auto position = agent.position.point; 
-
-    geometry_msgs::msg::Vector3 distance_vec;
-    distance_vec.x = position.x;
-    distance_vec.y = position.y;
-    distance_vec.z = position.z;
-
-    auto distance = get_vector_length(distance_vec); 
-
-    if(deadzone_enabled_)
-    {
-      if((inter_agent_distance_ - deadzone / 2  < distance) && (inter_agent_distance_ + deadzone / 2  > distance))
-        continue;
-    }
-
-    control_input_x += -apf_gain_ * distance_vec.x / distance * (1 - inter_agent_distance_ / distance);
-    control_input_y += apf_gain_ * distance_vec.y / distance * (1 - inter_agent_distance_ / distance);
-
-  }
-
-  if(low_pass_filter_enabled_)
-  {
-    filtered_x = alpha_ * filtered_x + (1 - alpha_) * control_input_x;
-    filtered_y = alpha_ * filtered_y + (1 - alpha_) * control_input_y;
-
-    control_input_x = filtered_x;
-    control_input_y = filtered_y;
-  }
-
-  // ***** send message ***** //
+  auto [control_input_x, control_input_y] = apf_controller_->compute(msg);
 
   instructions_msg_.linear.x = control_input_x;
   instructions_msg_.linear.y = control_input_y;

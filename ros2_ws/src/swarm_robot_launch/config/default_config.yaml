@@ -13,6 +13,9 @@ controller:
     tracking_init_topic: tracking_init
     tracked_objects_topic: tracked_objects
     odometry_topic: scan_odom
+    pid_p_gain: 1.0
+    pid_i_gain: 0.0
+    pid_d_gain: 0.0
 
 tracker:
   ros__parameters:

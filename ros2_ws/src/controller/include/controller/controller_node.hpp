@@ -9,6 +9,7 @@
 #include "nav_msgs/msg/odometry.hpp"
 
 #include "pid_controller.hpp"
+#include "apf_controller.hpp"
 
 class ControllerNode : public rclcpp::Node
 {
@@ -17,11 +18,13 @@ class ControllerNode : public rclcpp::Node
 
   private:
     double alpha_;
-    double deadzone;
+    double deadzone_;
     bool low_pass_filter_enabled_;
     bool deadzone_enabled_;
     double apf_gain_;
     double inter_agent_distance_;
+
+    double pid_p_gain_, pid_i_gain_, pid_d_gain_;
 
     std::string tracked_frame_id_;
     std::string segments_topic_;
@@ -47,10 +50,15 @@ class ControllerNode : public rclcpp::Node
     void odometry_subscriber_callback(nav_msgs::msg::Odometry::SharedPtr msg);
 
     std::unique_ptr<PIDController> pid_controller_;
+    std::unique_ptr<APFController> apf_controller_;
+
     std::shared_ptr<rclcpp::ParameterEventHandler> param_subscriber_;
     std::shared_ptr<rclcpp::ParameterCallbackHandle> apf_gain_cb_handle_;
     std::shared_ptr<rclcpp::ParameterCallbackHandle> deadzone_cb_handle_;
     std::shared_ptr<rclcpp::ParameterCallbackHandle> alpha_cb_handle_;
+    std::shared_ptr<rclcpp::ParameterCallbackHandle> pid_p_gain_cb_handle_;
+    std::shared_ptr<rclcpp::ParameterCallbackHandle> pid_i_gain_cb_handle_;
+    std::shared_ptr<rclcpp::ParameterCallbackHandle> pid_d_gain_cb_handle_;
 
     tracker_msgs::msg::TrackedObjectArray load_tracking_init_msg(std::string tracking_config_file);
     void initialize_tracking();
