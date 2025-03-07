@@ -13,20 +13,13 @@ apf_gain_(apf_gain),
 inter_agent_distance_(inter_agent_distance) 
 { }
 
-std::tuple<double, double> APFController::compute(tracker_msgs::msg::TrackedObjectArray::SharedPtr msg)
+std::tuple<double, double> APFController::compute(std::vector<geometry_msgs::msg::Vector3> distances_to_neighbours)
 {
   double control_input_x = 0.0, control_input_y = 0.0;
   static double filtered_x = 0.0, filtered_y = 0.0;
 
-  for(auto agent : msg->tracked_objects)
+  for(auto distance_vec : distances_to_neighbours)
   {
-    auto position = agent.position.point; 
-
-    geometry_msgs::msg::Vector3 distance_vec;
-    distance_vec.x = position.x;
-    distance_vec.y = position.y;
-    distance_vec.z = position.z;
-
     auto distance = get_vector_length(distance_vec); 
 
     if(deadzone_enabled_)
@@ -39,7 +32,6 @@ std::tuple<double, double> APFController::compute(tracker_msgs::msg::TrackedObje
 
     control_input_x += -apf_gain_ * distance_vec.x / distance * (1 - inter_agent_distance_ / distance);
     control_input_y += apf_gain_ * distance_vec.y / distance * (1 - inter_agent_distance_ / distance);
-
   }
 
   if(low_pass_filter_enabled_)

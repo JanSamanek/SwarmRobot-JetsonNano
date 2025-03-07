@@ -181,7 +181,20 @@ void ControllerNode::segments_subscriber_callback(slg_msgs::msg::SegmentArray::S
 
 void ControllerNode::tracked_objects_subscriber_callback(tracker_msgs::msg::TrackedObjectArray::SharedPtr msg)
 {
-  auto [control_input_x, control_input_y] = apf_controller_->compute(msg);
+  std::vector<geometry_msgs::msg::Vector3> distances_to_neighbours;
+  for(auto agent : msg->tracked_objects)
+  {
+    auto position = agent.position.point; 
+
+    geometry_msgs::msg::Vector3 distance_vec;
+    distance_vec.x = position.x;
+    distance_vec.y = position.y;
+    distance_vec.z = position.z;
+
+    distances_to_neighbours.push_back(distance_vec);
+  }
+
+  auto [control_input_x, control_input_y] = apf_controller_->compute(distances_to_neighbours);
 
   instructions_msg_.linear.x = control_input_x;
   instructions_msg_.linear.y = control_input_y;

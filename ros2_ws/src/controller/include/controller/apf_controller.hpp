@@ -10,7 +10,7 @@ public:
   APFController(double alpha, double deadzone, bool low_pass_filter_enabled, 
     bool deadzone_enabled, double apf_gain, double inter_agent_distance);
 
-  std::tuple<double, double> compute(tracker_msgs::msg::TrackedObjectArray::SharedPtr neighbours);
+  std::tuple<double, double> compute(std::vector<geometry_msgs::msg::Vector3> distances_to_neighbours);
 
 private:
   double alpha_;
