@@ -158,8 +158,8 @@ ControllerNode::ControllerNode(): Node("controller_node")
   RCLCPP_INFO(this->get_logger(),"Artificial potential field gain: [%.2f]", apf_gain_);
   RCLCPP_INFO(this->get_logger(),"Inter agent distance: [%.2f]", inter_agent_distance_);
   RCLCPP_INFO(this->get_logger(),"Deadzone: [%.2f] [%s]", deadzone_, deadzone_enabled_ ? "enabled" : "disabled");
-  RCLCPP_INFO(this->get_logger(),"Low pass filter alpha [%.2f] [%s]", alpha_, low_pass_filter_enabled_ ? "enabled" : "disabled");
-  RCLCPP_INFO(this->get_logger(),"Angular PID controller gains P:[%.2f] I:[%.2f] D: [%.2f]", pid_p_gain_, pid_i_gain_, pid_d_gain_);
+  RCLCPP_INFO(this->get_logger(),"Low pass filter alpha: [%.2f] [%s]", alpha_, low_pass_filter_enabled_ ? "enabled" : "disabled");
+  RCLCPP_INFO(this->get_logger(),"Angular PID controller gains P-gain:[%.2f] I-gain:[%.2f] D-gain:[%.2f]", pid_p_gain_, pid_i_gain_, pid_d_gain_);
   RCLCPP_INFO(this->get_logger(),"Activating node...");
 
   initialize_tracking(); 
