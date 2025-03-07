@@ -26,7 +26,7 @@ ControllerNode::ControllerNode(): Node("controller_node")
   instructions_msg_.angular.y = 0.0;
   instructions_msg_.angular.z = 0.0;
 
-  this->declare_parameter<double>("pid_p_gain", 1.0);
+  this->declare_parameter<double>("pid_p_gain", 0.0);
   this->declare_parameter<double>("pid_i_gain", 0.0);
   this->declare_parameter<double>("pid_d_gain", 0.0);
 
