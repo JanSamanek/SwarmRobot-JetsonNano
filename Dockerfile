@@ -8,6 +8,7 @@ python3-rosdep \
 build-essential \
 nlohmann-json3-dev \
 libeigen3-dev \
+libboost-all-dev \
 ros-humble-robot-state-publisher \
 git \
 && rm -rf /var/lib/apt/lists/* 
