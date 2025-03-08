@@ -13,7 +13,7 @@ int main(int argc, char ** argv)
 
   auto tracked_object_array_msg = load_tracking_init("tracking_init.json");
 
-  std::shared_ptr<rclcpp::Node> node = rclcpp::Node::make_shared("tracking_init_client");
+  std::shared_ptr<rclcpp::Node> node = std::make_shared<ControllerNode>();
   rclcpp::Client<tracker_msgs::srv::InitTracking>::SharedPtr client =
     node->create_client<tracker_msgs::srv::InitTracking>(TRACKING_INIT_TOPIC);
 
@@ -44,7 +44,7 @@ int main(int argc, char ** argv)
     RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to call service tracking init");
   }
 
-  rclcpp::spin(std::make_shared<ControllerNode>());
+  rclcpp::spin(node);
   rclcpp::shutdown();
 
   return 0;
