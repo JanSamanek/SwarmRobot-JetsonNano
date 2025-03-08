@@ -26,6 +26,8 @@ ControllerNode::ControllerNode(): Node("controller_node")
   instructions_msg_.angular.y = 0.0;
   instructions_msg_.angular.z = 0.0;
 
+  desired_angle_ = 0.0;
+
   this->declare_parameter<double>("pid_p_gain", 0.0);
   this->declare_parameter<double>("pid_i_gain", 0.0);
   this->declare_parameter<double>("pid_d_gain", 0.0);
@@ -181,7 +183,7 @@ void ControllerNode::segments_subscriber_callback(slg_msgs::msg::SegmentArray::S
 
 void ControllerNode::tracked_objects_subscriber_callback(tracker_msgs::msg::TrackedObjectArray::SharedPtr msg)
 {
-  std::vector<geometry_msgs::msg::Vector3> distances_to_neighbours;
+  std::vector<geometry_msgs::msg::Vector3> distances;
   for(auto agent : msg->tracked_objects)
   {
     auto position = agent.position.point; 
@@ -191,10 +193,10 @@ void ControllerNode::tracked_objects_subscriber_callback(tracker_msgs::msg::Trac
     distance_vec.y = position.y;
     distance_vec.z = position.z;
 
-    distances_to_neighbours.push_back(distance_vec);
+    distances.push_back(distance_vec);
   }
 
-  auto [control_input_x, control_input_y] = apf_controller_->compute(distances_to_neighbours);
+  auto [control_input_x, control_input_y] = apf_controller_->compute(distances);
 
   instructions_msg_.linear.x = control_input_x;
   instructions_msg_.linear.y = control_input_y;
@@ -203,12 +205,10 @@ void ControllerNode::tracked_objects_subscriber_callback(tracker_msgs::msg::Trac
 }
 
 void ControllerNode::odometry_subscriber_callback(nav_msgs::msg::Odometry::SharedPtr msg)
-{
-  double desired_angle = 0.0;
-  
+{  
   double yaw = get_yaw_from_quaternion(msg->pose.pose.orientation);
 
-  double angular_error = yaw - desired_angle;
+  double angular_error = yaw - desired_angle_;
 
   if (angular_error > M_PI)
     angular_error -= 2.0 * M_PI;

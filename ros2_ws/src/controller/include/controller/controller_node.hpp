@@ -25,6 +25,7 @@ class ControllerNode : public rclcpp::Node
     double inter_agent_distance_;
 
     double pid_p_gain_, pid_i_gain_, pid_d_gain_;
+    double desired_angle_;
 
     std::string tracked_frame_id_;
     std::string segments_topic_;
