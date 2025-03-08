@@ -1,4 +1,14 @@
 {
+    "python.autoComplete.extraPaths": [
+        "/SwarmRobot-JetsonNano/ros2_ws/install/tracker_msgs/local/lib/python3.10/dist-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/SwarmRobot-JetsonNano/ros2_ws/install/tracker_msgs/local/lib/python3.10/dist-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
     "files.associations": {
         "cctype": "cpp",
         "clocale": "cpp",
@@ -73,12 +83,7 @@
         "cinttypes": "cpp",
         "typeindex": "cpp",
         "typeinfo": "cpp",
-        "variant": "cpp",
-        "regex": "cpp",
-        "dense": "cpp",
-        "core": "cpp",
-        "eigenvalues": "cpp",
-        "valarray": "cpp"
-    },
-    "C_Cpp.errorSquiggles": "enabled"
+        "valarray": "cpp",
+        "variant": "cpp"
+    }
 }

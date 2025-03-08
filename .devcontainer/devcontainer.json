@@ -17,5 +17,5 @@
   "mounts": [
     "source=${localEnv:HOME}${localEnv:USERPROFILE}/.bash_history,target=/home/vscode/.bash_history,type=bind"
   ],
-  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y nlohmann-json3-dev libeigen3-dev && sudo rosdep update && sudo rosdep install --from-paths src --ignore-src -y"
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y nlohmann-json3-dev libeigen3-dev libpcl-dev && sudo rosdep update && sudo rosdep install --from-paths src --ignore-src -y --skip-keys PCL --skip-keys Eigen3"
 }

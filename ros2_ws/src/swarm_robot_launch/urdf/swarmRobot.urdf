@@ -1,0 +1,11 @@
+<robot name="example_robot">
+
+  <link name="base_link"/>
+  <link name="lidar"/>
+
+  <joint name="lidar_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="lidar"/>
+    <origin xyz="0.0 0 0" rpy="0 0 0"/>
+  </joint>
+</robot>

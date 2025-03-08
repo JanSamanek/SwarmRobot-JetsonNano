@@ -1,0 +1,26 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/SwarmRobot-JetsonNano/ros2_ws/install/tracker_msgs/include/**",
+        "/SwarmRobot-JetsonNano/ros2_ws/install/laser_segmentation/include/**",
+        "/opt/ros/humble/include/**",
+        "/SwarmRobot-JetsonNano/ros2_ws/src/controller/include/**",
+        "/SwarmRobot-JetsonNano/ros2_ws/src/laser_segmentation/include/**",
+        "/SwarmRobot-JetsonNano/ros2_ws/src/rplidar_ros/include/**",
+        "/SwarmRobot-JetsonNano/ros2_ws/src/tracker/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

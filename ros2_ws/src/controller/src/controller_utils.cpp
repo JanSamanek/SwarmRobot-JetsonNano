@@ -1,6 +1,5 @@
 #include "controller_utils.hpp"
 #include "rclcpp/rclcpp.hpp"
-
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include <nlohmann/json.hpp>
 #include <fstream>
@@ -51,4 +50,18 @@ tracker_msgs::msg::TrackedObjectArray load_tracking_init(std::string config_file
       RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Error: %s", e.what());
     }
     return tracked_object_array_msg;
+}
+
+double get_vector_length(const geometry_msgs::msg::Vector3 &vec)
+{
+    return sqrt(pow(vec.x, 2) + pow(vec.y, 2) + pow(vec.z, 2));
+}
+
+double get_yaw_from_quaternion(const geometry_msgs::msg::Quaternion &quat)
+{
+    tf2::Quaternion q(quat.x, quat.y, quat.z, quat.w);
+    tf2::Matrix3x3 m(q);
+    double roll, pitch, yaw;
+    m.getRPY(roll, pitch, yaw);
+    return yaw;
 }

@@ -9,12 +9,17 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(slg_msgs REQUIRED)
 find_package(tracker_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
+find_package(tf2 REQUIRED) 
+find_package(tf2_geometry_msgs REQUIRED)
 
 set(source
   src/controller_node.cpp
+  src/pid_controller.cpp
+  src/apf_controller.cpp
   src/controller_utils.cpp
 )
 
@@ -33,7 +38,10 @@ target_link_libraries(${library_name}
   slg_msgs::slg_core
   ${tracker_msgs_TARGETS}
   ${geometry_msgs_TARGETS}
+  ${nav_msgs_TARGETS}
   ${nlohmann_json_TARGETS}
+  tf2::tf2 
+  tf2_geometry_msgs::tf2_geometry_msgs 
 )
 
 set(executable_name ${PROJECT_NAME}_node)
