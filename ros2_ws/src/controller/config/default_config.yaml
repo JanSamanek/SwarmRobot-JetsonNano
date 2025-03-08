@@ -4,9 +4,9 @@ controller:
     deadzone: 0.1
     low_pass_filter_enabled: true
     deadzone_enabled: true
-    apf_gain: 4.35
+    apf_gain: 3.35
     inter_agent_distance: 0.5
-    pid_p_gain: 0.05
+    pid_p_gain: 189.9
     pid_i_gain: 0.0
     pid_d_gain: 0.0
     tracked_frame_id: laser
