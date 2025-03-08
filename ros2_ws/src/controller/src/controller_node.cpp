@@ -56,7 +56,7 @@ ControllerNode::ControllerNode(): Node("controller_node")
   this->declare_parameter<std::string>("detected_objects_topic", "detected_objects");
   this->declare_parameter<std::string>("tracking_init_topic", "tracked_objects_init");
   this->declare_parameter<std::string>("tracked_objects_topic", "tracked_objects");
-  this->declare_parameter<std::string>("odometry_topic", "scan_odom");
+  this->declare_parameter<std::string>("odometry_topic", "odom");
 
   this->get_parameter<std::string>("tracked_frame_id", tracked_frame_id_);
   this->get_parameter<std::string>("segments_topic", segments_topic_);
@@ -204,13 +204,11 @@ void ControllerNode::tracked_objects_subscriber_callback(tracker_msgs::msg::Trac
 
 void ControllerNode::odometry_subscriber_callback(nav_msgs::msg::Odometry::SharedPtr msg)
 {
-  static double robot_yaw = 0.0;
   double desired_angle = 0.0;
   
-  double delta_yaw = get_yaw_from_quaternion(msg->pose.pose.orientation);
-  robot_yaw += delta_yaw;
+  double yaw = get_yaw_from_quaternion(msg->pose.pose.orientation);
 
-  double angular_error = desired_angle - robot_yaw;
+  double angular_error = desired_angle - yaw;
 
   if (angular_error > M_PI)
     angular_error -= 2.0 * M_PI;

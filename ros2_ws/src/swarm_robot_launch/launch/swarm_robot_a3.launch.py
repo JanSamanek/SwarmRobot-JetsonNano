@@ -7,11 +7,37 @@ from launch.actions import TimerAction
 from launch_ros.actions import Node
 
 def generate_launch_description():
-        
+    urdf_file_name = 'swarmRobot.urdf'
+
+    urdf=os.path.join(
+        get_package_share_directory('swarm_robot_launch'),
+        'urdf',
+        urdf_file_name
+    )
+
+    with open(urdf, 'r') as infp:
+      robot_desc = infp.read()
+    
+    robot_state_publisher_node = Node(
+      package='robot_state_publisher',
+      executable='robot_state_publisher',
+      name='robot_state_publisher',
+      output='screen',
+      parameters=[{'robot_description': robot_desc}],
+      arguments=[urdf]
+      )
+    
     odometry_node = Node(
-        package='lidar_odometry',
-        executable='lidar_odometry_node',
-        name='lidar_odometry_node',
+        package='ros2_laser_scan_matcher',
+        parameters=[{
+            'base_frame':'base_link',
+            'odom_frame':'odom',
+            'laser_frame':'lidar',
+            'publish_odom':'/odom',
+            'publish_tf':False
+        }],
+        executable='laser_scan_matcher',
+        name='odometry_publisher',
         output='screen',
     )
 
@@ -45,6 +71,7 @@ def generate_launch_description():
       launch_arguments={'params_file': config_path}.items())
 
     return LaunchDescription([
+        robot_state_publisher_node,
         lidar_node,
         odometry_node,
         segmentation_node,

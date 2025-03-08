@@ -8,7 +8,7 @@ python3-rosdep \
 build-essential \
 nlohmann-json3-dev \
 libeigen3-dev \
-libpcl-dev \
+ros-humble-robot-state-publisher \
 git \
 && rm -rf /var/lib/apt/lists/* 
 
@@ -33,7 +33,8 @@ WORKDIR /ros2_ws
 RUN cd src/ && \
     git clone https://github.com/Slamtec/rplidar_ros.git -b ros2 && \
     git clone https://github.com/ajtudela/laser_segmentation.git && \
-    git clone https://github.com/dawan0111/Simple-2D-LiDAR-Odometry.git
+    git clone https://github.com/AlexKaravaev/csm.git -b ros2_csm_eigen \
+    git clone https://github.com/AlexKaravaev/ros2_laser_scan_matcher.git
 
 COPY ros2_ws/src ./src
 COPY entrypoint.sh ./entrypoint.sh
@@ -43,7 +44,7 @@ USER $USERNAME
 RUN sudo apt-get update && \
     source /opt/ros/humble/setup.bash && \
     rosdep update && \
-    rosdep install --from-paths src --ignore-src -r --rosdistro humble -y --skip-keys PCL --skip-keys Eigen3
+    rosdep install --from-paths src --ignore-src -r --rosdistro humble -y
 
 USER root
 RUN apt-get update && \

@@ -15,4 +15,4 @@ controller:
     detected_objects_topic: detected_objects
     tracking_init_topic: tracking_init
     tracked_objects_topic: tracked_objects
-    odometry_topic: scan_odom
+    odometry_topic: odom
