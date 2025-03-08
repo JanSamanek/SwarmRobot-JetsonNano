@@ -6,7 +6,7 @@
 #include "tracker_msgs/msg/tracked_object_array.hpp"
 
 tracker_msgs::msg::TrackedObjectArray load_tracking_init(std::string config_file);
-double get_vector_length(const geometry_msgs::msg::Vector3 &vec);
-double get_yaw_from_quaternion(const geometry_msgs::msg::Quaternion &quat);
+double get_length(const geometry_msgs::msg::Vector3 &vec);
+double get_yaw(const geometry_msgs::msg::Quaternion &quat);
 
 #endif  // CONTROLLER_UTILS_H

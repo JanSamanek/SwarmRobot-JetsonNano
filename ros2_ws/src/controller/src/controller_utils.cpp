@@ -52,12 +52,12 @@ tracker_msgs::msg::TrackedObjectArray load_tracking_init(std::string config_file
     return tracked_object_array_msg;
 }
 
-double get_vector_length(const geometry_msgs::msg::Vector3 &vec)
+double get_length(const geometry_msgs::msg::Vector3 &vec)
 {
     return sqrt(pow(vec.x, 2) + pow(vec.y, 2) + pow(vec.z, 2));
 }
 
-double get_yaw_from_quaternion(const geometry_msgs::msg::Quaternion &quat)
+double get_yaw(const geometry_msgs::msg::Quaternion &quat)
 {
     tf2::Quaternion q(quat.x, quat.y, quat.z, quat.w);
     tf2::Matrix3x3 m(q);

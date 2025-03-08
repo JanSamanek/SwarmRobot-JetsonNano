@@ -192,7 +192,7 @@ void ControllerNode::tracked_objects_subscriber_callback(tracker_msgs::msg::Trac
 
 void ControllerNode::odometry_subscriber_callback(nav_msgs::msg::Odometry::SharedPtr msg)
 {  
-  double yaw = get_yaw_from_quaternion(msg->pose.pose.orientation);
+  double yaw = get_yaw(msg->pose.pose.orientation);
 
   double angular_error = yaw - desired_angle_;
 

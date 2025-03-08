@@ -20,7 +20,7 @@ std::tuple<double, double> APFController::compute(std::vector<geometry_msgs::msg
 
   for(auto distance_vec : distances_to_neighbours)
   {
-    auto distance = get_vector_length(distance_vec); 
+    auto distance = get_length(distance_vec); 
 
     if(deadzone_enabled_)
     {
