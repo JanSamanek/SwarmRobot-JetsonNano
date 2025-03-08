@@ -208,7 +208,7 @@ void ControllerNode::odometry_subscriber_callback(nav_msgs::msg::Odometry::Share
   
   double yaw = get_yaw_from_quaternion(msg->pose.pose.orientation);
 
-  double angular_error = desired_angle - yaw;
+  double angular_error = yaw - desired_angle;
 
   if (angular_error > M_PI)
     angular_error -= 2.0 * M_PI;
