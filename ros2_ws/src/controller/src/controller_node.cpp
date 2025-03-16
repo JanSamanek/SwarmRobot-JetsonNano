@@ -87,7 +87,8 @@ ControllerNode::ControllerNode(): Node("controller_node")
   auto apf_gain_cb = [this](const rclcpp::Parameter & p) {
     apf_gain_ = p.as_double();
     apf_controller_ = std::make_unique<APFController>(alpha_, deadzone_, low_pass_filter_enabled_, 
-      deadzone_enabled_, apf_gain_, inter_agent_distance_);
+      deadzone_enabled_, apf_gain_, inter_agent_distance_, 
+      deadzone_pid_p_gain_, deadzone_pid_i_gain_);
     LOG_PARAMETER_UPDATE(this, p);
   };
   apf_gain_cb_handle_ = param_subscriber_->add_parameter_callback("apf_gain", apf_gain_cb);
@@ -95,7 +96,8 @@ ControllerNode::ControllerNode(): Node("controller_node")
   auto alpha_cb = [this](const rclcpp::Parameter & p) {
     alpha_ = p.as_double();
     apf_controller_ = std::make_unique<APFController>(alpha_, deadzone_, low_pass_filter_enabled_, 
-      deadzone_enabled_, apf_gain_, inter_agent_distance_);
+      deadzone_enabled_, apf_gain_, inter_agent_distance_, 
+      deadzone_pid_p_gain_, deadzone_pid_i_gain_);
     LOG_PARAMETER_UPDATE(this, p);
   };
   alpha_cb_handle_ = param_subscriber_->add_parameter_callback("alpha", alpha_cb);
@@ -103,7 +105,8 @@ ControllerNode::ControllerNode(): Node("controller_node")
   auto deadzone_cb = [this](const rclcpp::Parameter & p) {
     deadzone_ = p.as_double();
     apf_controller_ = std::make_unique<APFController>(alpha_, deadzone_, low_pass_filter_enabled_, 
-      deadzone_enabled_, apf_gain_, inter_agent_distance_);
+      deadzone_enabled_, apf_gain_, inter_agent_distance_, 
+      deadzone_pid_p_gain_, deadzone_pid_i_gain_);
     LOG_PARAMETER_UPDATE(this, p);
   };
   deadzone_cb_handle_ = param_subscriber_->add_parameter_callback("deadzone", deadzone_cb);
