@@ -10,6 +10,16 @@
 
 using std::placeholders::_1;
 
+#define LOG_PARAMETER_UPDATE(node, p) \
+    RCLCPP_INFO( \
+        (node)->get_logger(), \
+        "Received an update to parameter \"%s\" of type %s: \"%.2f\"", \
+        (p).get_name().c_str(), \
+        (p).get_type_name().c_str(), \
+        (p).as_double() \
+    )
+
+
 ControllerNode::ControllerNode(): Node("controller_node")
 {
   instructions_msg_.linear.x = 0.0;
@@ -24,11 +34,14 @@ ControllerNode::ControllerNode(): Node("controller_node")
   this->declare_parameter<double>("pid_p_gain", 0.0);
   this->declare_parameter<double>("pid_i_gain", 0.0);
   this->declare_parameter<double>("pid_d_gain", 0.0);
-
   this->get_parameter<double>("pid_p_gain", pid_p_gain_);
   this->get_parameter<double>("pid_i_gain", pid_i_gain_);
   this->get_parameter<double>("pid_d_gain", pid_d_gain_);
 
+  this->declare_parameter<double>("deadzone_pid_p_gain", 0.0);
+  this->declare_parameter<double>("deadzone_pid_i_gain", 0.0);
+  this->get_parameter<double>("deadzone_pid_p_gain", deadzone_pid_p_gain_);
+  this->get_parameter<double>("deadzone_pid_p_gain", deadzone_pid_i_gain_);
 
   this->declare_parameter<bool>("low_pass_filter_enabled", true);
   this->declare_parameter<double>("alpha", 0.8);
@@ -36,7 +49,6 @@ ControllerNode::ControllerNode(): Node("controller_node")
   this->declare_parameter<double>("deadzone", 0.05);
   this->declare_parameter<double>("apf_gain", 0.4);
   this->declare_parameter<double>("inter_agent_distance", 0.5);
-
   this->get_parameter<bool>("low_pass_filter_enabled", low_pass_filter_enabled_);
   this->get_parameter<double>("alpha", alpha_);
   this->get_parameter<bool>("deadzone_enabled", deadzone_enabled_);
@@ -44,13 +56,11 @@ ControllerNode::ControllerNode(): Node("controller_node")
   this->get_parameter<double>("apf_gain", apf_gain_);
   this->get_parameter<double>("inter_agent_distance", inter_agent_distance_);
 
-
   this->declare_parameter<std::string>("segments_topic", "segments");
   this->declare_parameter<std::string>("instructions_topic", "instructions");
   this->declare_parameter<std::string>("detected_objects_topic", "detected_objects");
   this->declare_parameter<std::string>("tracked_objects_topic", "tracked_objects");
   this->declare_parameter<std::string>("odometry_topic", "odom");
-
   this->get_parameter<std::string>("segments_topic", segments_topic_);
   this->get_parameter<std::string>("instructions_topic", instructions_topic_);
   this->get_parameter<std::string>("detected_objects_topic", detected_objects_topic_);
@@ -69,7 +79,8 @@ ControllerNode::ControllerNode(): Node("controller_node")
   
   pid_controller_ = std::make_unique<PIDController>(pid_p_gain_, pid_i_gain_, pid_d_gain_);
   apf_controller_ = std::make_unique<APFController>(alpha_, deadzone_, low_pass_filter_enabled_, 
-    deadzone_enabled_, apf_gain_, inter_agent_distance_);
+                                                    deadzone_enabled_, apf_gain_, inter_agent_distance_, 
+                                                    deadzone_pid_p_gain_, deadzone_pid_i_gain_);
 
   param_subscriber_ = std::make_shared<rclcpp::ParameterEventHandler>(this);
 
@@ -77,11 +88,7 @@ ControllerNode::ControllerNode(): Node("controller_node")
     apf_gain_ = p.as_double();
     apf_controller_ = std::make_unique<APFController>(alpha_, deadzone_, low_pass_filter_enabled_, 
       deadzone_enabled_, apf_gain_, inter_agent_distance_);
-    RCLCPP_INFO(
-      this->get_logger(), "Received an update to parameter \"%s\" of type %s: \"%.2f\"",
-      p.get_name().c_str(),
-      p.get_type_name().c_str(),
-      p.as_double());
+    LOG_PARAMETER_UPDATE(this, p);
   };
   apf_gain_cb_handle_ = param_subscriber_->add_parameter_callback("apf_gain", apf_gain_cb);
 
@@ -89,11 +96,7 @@ ControllerNode::ControllerNode(): Node("controller_node")
     alpha_ = p.as_double();
     apf_controller_ = std::make_unique<APFController>(alpha_, deadzone_, low_pass_filter_enabled_, 
       deadzone_enabled_, apf_gain_, inter_agent_distance_);
-    RCLCPP_INFO(
-      this->get_logger(), "Received an update to parameter \"%s\" of type %s: \"%.2f\"",
-      p.get_name().c_str(),
-      p.get_type_name().c_str(),
-      p.as_double());
+    LOG_PARAMETER_UPDATE(this, p);
   };
   alpha_cb_handle_ = param_subscriber_->add_parameter_callback("alpha", alpha_cb);
 
@@ -101,55 +104,51 @@ ControllerNode::ControllerNode(): Node("controller_node")
     deadzone_ = p.as_double();
     apf_controller_ = std::make_unique<APFController>(alpha_, deadzone_, low_pass_filter_enabled_, 
       deadzone_enabled_, apf_gain_, inter_agent_distance_);
-    RCLCPP_INFO(
-      this->get_logger(), "Received an update to parameter \"%s\" of type %s: \"%.2f\"",
-      p.get_name().c_str(),
-      p.get_type_name().c_str(),
-      p.as_double());
+    LOG_PARAMETER_UPDATE(this, p);
   };
   deadzone_cb_handle_ = param_subscriber_->add_parameter_callback("deadzone", deadzone_cb);
 
   auto pid_p_gain_cb_ = [this](const rclcpp::Parameter & p) {
     pid_p_gain_ = p.as_double();
     pid_controller_ = std::make_unique<PIDController>(pid_p_gain_, pid_i_gain_, pid_d_gain_);
-
-    RCLCPP_INFO(
-      this->get_logger(), "Received an update to parameter \"%s\" of type %s: \"%.2f\"",
-      p.get_name().c_str(),
-      p.get_type_name().c_str(),
-      p.as_double());
+    LOG_PARAMETER_UPDATE(this, p);
   };
   pid_p_gain_cb_handle_ = param_subscriber_->add_parameter_callback("pid_p_gain", pid_p_gain_cb_);
 
   auto pid_i_gain_cb = [this](const rclcpp::Parameter & p) {
     pid_i_gain_ = p.as_double();
     pid_controller_ = std::make_unique<PIDController>(pid_p_gain_, pid_i_gain_, pid_d_gain_);
-
-    RCLCPP_INFO(
-      this->get_logger(), "Received an update to parameter \"%s\" of type %s: \"%.2f\"",
-      p.get_name().c_str(),
-      p.get_type_name().c_str(),
-      p.as_double());
+    LOG_PARAMETER_UPDATE(this, p);
   };
   pid_i_gain_cb_handle_ = param_subscriber_->add_parameter_callback("pid_i_gain", pid_i_gain_cb);
 
   auto pid_d_gain_cb = [this](const rclcpp::Parameter & p) {
     pid_d_gain_ = p.as_double();
     pid_controller_ = std::make_unique<PIDController>(pid_p_gain_, pid_i_gain_, pid_d_gain_);
-
-    RCLCPP_INFO(
-      this->get_logger(), "Received an update to parameter \"%s\" of type %s: \"%.2f\"",
-      p.get_name().c_str(),
-      p.get_type_name().c_str(),
-      p.as_double());
+    LOG_PARAMETER_UPDATE(this, p);
   };
   pid_d_gain_cb_handle_ = param_subscriber_->add_parameter_callback("pid_d_gain", pid_d_gain_cb);
+
+  auto deadzone_pid_p_gain_cb_ = [this](const rclcpp::Parameter & p) {
+    deadzone_pid_p_gain_ = p.as_double();
+    apf_controller_->pid_controller_ = std::make_unique<PIDController>(deadzone_pid_p_gain_, deadzone_pid_i_gain_, 0.0);
+    LOG_PARAMETER_UPDATE(this, p);
+  };
+  deadzone_pid_p_gain_cb_handle_ = param_subscriber_->add_parameter_callback("deadzone_pid_p_gain", deadzone_pid_p_gain_cb_);
+
+  auto deadzone_pid_i_gain_cb_ = [this](const rclcpp::Parameter & p) {
+    deadzone_pid_i_gain_ = p.as_double();
+    apf_controller_->pid_controller_ = std::make_unique<PIDController>(deadzone_pid_p_gain_, deadzone_pid_i_gain_, 0.0);
+    LOG_PARAMETER_UPDATE(this, p);
+  };
+  deadzone_pid_i_gain_cb_handle_ = param_subscriber_->add_parameter_callback("deadzone_pid_i_gain", deadzone_pid_i_gain_cb_);
 
   RCLCPP_INFO(this->get_logger(),"Artificial potential field gain: [%.2f]", apf_gain_);
   RCLCPP_INFO(this->get_logger(),"Inter agent distance: [%.2f]", inter_agent_distance_);
   RCLCPP_INFO(this->get_logger(),"Deadzone: [%.2f] [%s]", deadzone_, deadzone_enabled_ ? "enabled" : "disabled");
   RCLCPP_INFO(this->get_logger(),"Low pass filter alpha: [%.2f] [%s]", alpha_, low_pass_filter_enabled_ ? "enabled" : "disabled");
   RCLCPP_INFO(this->get_logger(),"Angular PID controller gains P-gain:[%.2f] I-gain:[%.2f] D-gain:[%.2f]", pid_p_gain_, pid_i_gain_, pid_d_gain_);
+  RCLCPP_INFO(this->get_logger(),"Deadzone PID controller gains P-gain:[%.2f] I-gain:[%.2f] D-gain:[%.2f]", deadzone_pid_p_gain_, deadzone_pid_i_gain_, 0.0);
   RCLCPP_INFO(this->get_logger(),"Activating node...");
 }
 
@@ -169,30 +168,7 @@ void ControllerNode::segments_subscriber_callback(slg_msgs::msg::SegmentArray::S
 
 void ControllerNode::tracked_objects_subscriber_callback(tracker_msgs::msg::TrackedObjectArray::SharedPtr msg)
 {
-  std::vector<geometry_msgs::msg::Vector3> distances;
-  for(auto agent : msg->tracked_objects)
-  {
-    auto position = agent.position.point; 
-
-    geometry_msgs::msg::Vector3 distance_vec;
-    distance_vec.x = position.x;
-    distance_vec.y = position.y;
-    distance_vec.z = position.z;
-
-    distances.push_back(distance_vec);
-  }
-
-  auto [control_input_x, control_input_y] = apf_controller_->compute(distances);
-
-  instructions_msg_.linear.x = control_input_x;
-  instructions_msg_.linear.y = control_input_y;
-
-  instructions_pub_->publish(instructions_msg_);
-}
-
-void ControllerNode::odometry_subscriber_callback(nav_msgs::msg::Odometry::SharedPtr msg)
-{  
-  double yaw = get_yaw(msg->pose.pose.orientation);
+  double yaw = get_yaw(odometry_.pose.pose.orientation);
 
   double angular_error = yaw - desired_angle_;
 
@@ -203,5 +179,29 @@ void ControllerNode::odometry_subscriber_callback(nav_msgs::msg::Odometry::Share
 
   double angular_velocity = pid_controller_->compute(angular_error);
 
+  std::vector<geometry_msgs::msg::Vector3> distances;
+  for(auto agent : msg->tracked_objects)
+  {
+    auto position = agent.position.point; 
+    
+    geometry_msgs::msg::Vector3 distance_vec;
+    distance_vec.x = position.x;
+    distance_vec.y = position.y;
+    distance_vec.z = position.z;
+    
+    distances.push_back(distance_vec);
+  }
+  
+  auto [control_input_x, control_input_y] = apf_controller_->compute(distances, odometry_);
+  
   instructions_msg_.angular.z = angular_velocity;
+  instructions_msg_.linear.x = control_input_x;
+  instructions_msg_.linear.y = control_input_y;
+
+  instructions_pub_->publish(instructions_msg_);
+}
+
+void ControllerNode::odometry_subscriber_callback(nav_msgs::msg::Odometry::SharedPtr msg)
+{  
+  odometry_ = *msg;
 }

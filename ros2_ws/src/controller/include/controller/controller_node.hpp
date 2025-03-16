@@ -27,6 +27,8 @@ class ControllerNode : public rclcpp::Node
     double pid_p_gain_, pid_i_gain_, pid_d_gain_;
     double desired_angle_;
 
+    double deadzone_pid_p_gain_, deadzone_pid_i_gain_;
+
     std::string tracked_frame_id_;
     std::string segments_topic_;
     std::string instructions_topic_;
@@ -35,6 +37,7 @@ class ControllerNode : public rclcpp::Node
     std::string odometry_topic_;
 
     geometry_msgs::msg::Twist instructions_msg_;
+    nav_msgs::msg::Odometry odometry_;
 
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr instructions_pub_;
     rclcpp::Publisher<tracker_msgs::msg::DetectedObjectArray>::SharedPtr detected_objects_pub_;
@@ -58,6 +61,8 @@ class ControllerNode : public rclcpp::Node
     std::shared_ptr<rclcpp::ParameterCallbackHandle> pid_p_gain_cb_handle_;
     std::shared_ptr<rclcpp::ParameterCallbackHandle> pid_i_gain_cb_handle_;
     std::shared_ptr<rclcpp::ParameterCallbackHandle> pid_d_gain_cb_handle_;
+    std::shared_ptr<rclcpp::ParameterCallbackHandle> deadzone_pid_p_gain_cb_handle_;
+    std::shared_ptr<rclcpp::ParameterCallbackHandle> deadzone_pid_i_gain_cb_handle_;
 };
 
 #endif // !CONTROLLER_NODE_H
