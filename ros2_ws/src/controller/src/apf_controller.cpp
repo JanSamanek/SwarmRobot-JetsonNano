@@ -39,11 +39,14 @@ std::tuple<double, double> APFController::compute(const std::vector<geometry_msg
 
   if(deadzone_enabled_)
   {
-    if(control_input_x == 0.0 && control_input_y == 0.0 && deadzone_triggered_== false)
+    if(control_input_x == 0.0 && control_input_y == 0.0)
     {
-      deadzone_triggered_ = true;
-      deadzone_position_x_ = -odometry.pose.pose.position.x;
-      deadzone_position_y_ = odometry.pose.pose.position.y;
+      if(deadzone_triggered_== false)
+      {
+        deadzone_triggered_ = true;
+        deadzone_position_x_ = -odometry.pose.pose.position.x;
+        deadzone_position_y_ = odometry.pose.pose.position.y;
+      }
     }
     else
     {
