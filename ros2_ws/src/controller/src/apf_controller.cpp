@@ -42,7 +42,7 @@ std::tuple<double, double> APFController::compute(const std::vector<geometry_msg
     if(control_input_x == 0.0)
     {
       auto desired_velocity = 0.0;
-      auto velocity_x = odometry.twist.twist.linear.x;
+      auto velocity_x = -odometry.twist.twist.linear.x;
       auto error = velocity_x - desired_velocity;
       control_input_x = pid_controller_->compute(error);
     }
