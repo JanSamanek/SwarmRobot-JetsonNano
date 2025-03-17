@@ -56,12 +56,12 @@ std::tuple<double, double> APFController::compute(const std::vector<geometry_msg
     if(deadzone_triggered_)
     {
       auto position_x = -odometry.pose.pose.position.x;
-      auto error = deadzone_position_x_ - position_x;
-      control_input_x = pid_controller_->compute(error);
+      auto error_x = deadzone_position_x_ - position_x;
+      control_input_x = pid_controller_->compute(error_x);
       
       auto position_y = odometry.twist.twist.linear.y;
-      auto error = deadzone_position_y_ - position_y;
-      control_input_y = pid_controller_->compute(error);
+      auto error_y = deadzone_position_y_ - position_y;
+      control_input_y = pid_controller_->compute(error_y);
     }
   }
     
