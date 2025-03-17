@@ -27,7 +27,9 @@ private:
   double apf_gain_;
   double inter_agent_distance_;
 
+  bool deadzone_triggered_ = false;
   double filtered_x_ = 0.0, filtered_y_ = 0.0;
+  double deadzone_position_x_, deadzone_position_y_;
 };
 
 #endif // APF_CONTROLLER_H

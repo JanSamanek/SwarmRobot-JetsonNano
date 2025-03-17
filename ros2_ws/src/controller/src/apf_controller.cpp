@@ -39,23 +39,29 @@ std::tuple<double, double> APFController::compute(const std::vector<geometry_msg
 
   if(deadzone_enabled_)
   {
-    if(control_input_x == 0.0)
+    if(control_input_x == 0.0 && control_input_y == 0.0 && deadzone_triggered_== false)
     {
-      auto desired_velocity = 0.0;
-      auto velocity_x = -odometry.twist.twist.linear.x;
-      auto error = velocity_x - desired_velocity;
-      control_input_x = pid_controller_->compute(error);
+      deadzone_triggered_ = true;
+      deadzone_position_x_ = -odometry.pose.pose.position.x;
+      deadzone_position_y_ = odometry.pose.pose.position.y;
     }
-
-    if(control_input_y == 0.0)
+    else
     {
-      auto desired_velocity = 0.0;
-      auto velocity_y = odometry.twist.twist.linear.y;
-      auto error = velocity_y - desired_velocity;
+      deadzone_triggered_ = false;
+    }
+    
+    if(deadzone_triggered_)
+    {
+      auto position_x = -odometry.pose.pose.position.x;
+      auto error = deadzone_position_x_ - position_x;
+      control_input_x = pid_controller_->compute(error);
+      
+      auto position_y = odometry.twist.twist.linear.y;
+      auto error = deadzone_position_y_ - position_y;
       control_input_y = pid_controller_->compute(error);
     }
   }
-
+    
   if(low_pass_filter_enabled_)
   {
     filtered_x_ = alpha_ * filtered_x_ + (1 - alpha_) * control_input_x;
