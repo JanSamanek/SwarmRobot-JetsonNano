@@ -4,7 +4,7 @@ controller:
     deadzone: 0.1
     low_pass_filter_enabled: true
     deadzone_enabled: true
-    apf_gain: 3.35
+    apf_gain: 2.5
     inter_agent_distance: 0.5
     pid_p_gain: 189.9
     pid_i_gain: 0.0
