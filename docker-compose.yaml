@@ -8,6 +8,8 @@ services:
     devices:
       - /dev/ttyUSB0
     tty: true
+    volumes:
+      - ./ros2_ws/src/controller/config/tracking_init.json:/ros2_ws/src/controller/config/tracking_init.json
 
   microros_agent:
     image: microros/micro-ros-agent:humble
