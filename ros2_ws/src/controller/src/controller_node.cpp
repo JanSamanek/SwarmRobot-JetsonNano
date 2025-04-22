@@ -19,7 +19,7 @@ ControllerNode::ControllerNode(): Node("controller_node")
   instructions_msg_.angular.y = 0.0;
   instructions_msg_.angular.z = 0.0;
 
-  desired_angle_ = 0.0;
+  current_yaw_ = 0.0;
 
   this->declare_parameter<double>("pid_p_gain", 0.0);
   this->declare_parameter<double>("pid_i_gain", 0.0);
@@ -184,17 +184,7 @@ void ControllerNode::tracked_objects_subscriber_callback(tracker_msgs::msg::Trac
 
   auto [control_input_x, control_input_y] = apf_controller_->compute(distances);
 
-  instructions_msg_.linear.x = control_input_x;
-  instructions_msg_.linear.y = control_input_y;
-
-  instructions_pub_->publish(instructions_msg_);
-}
-
-void ControllerNode::odometry_subscriber_callback(nav_msgs::msg::Odometry::SharedPtr msg)
-{  
-  double yaw = get_yaw(msg->pose.pose.orientation);
-
-  double angular_error = yaw - desired_angle_;
+  double angular_error = -std::atan2(control_input_y, control_input_x) * 180.0 / M_PI;
 
   if (angular_error > M_PI)
     angular_error -= 2.0 * M_PI;
@@ -203,5 +193,14 @@ void ControllerNode::odometry_subscriber_callback(nav_msgs::msg::Odometry::Share
 
   double angular_velocity = pid_controller_->compute(angular_error);
 
+  instructions_msg_.linear.x = control_input_x;
+  instructions_msg_.linear.y = control_input_y;
   instructions_msg_.angular.z = angular_velocity;
+
+  instructions_pub_->publish(instructions_msg_);
+}
+
+void ControllerNode::odometry_subscriber_callback(nav_msgs::msg::Odometry::SharedPtr msg)
+{  
+  current_yaw_ = get_yaw(msg->pose.pose.orientation);
 }
