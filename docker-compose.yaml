@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
     container_name: ros2
     network_mode: host
+    devices:
+      - /dev/ttyUSB0
     tty: true
     volumes:
       - ./ros2_ws/src/controller/config/tracking_init.json:/ros2_ws/src/controller/config/tracking_init.json    
