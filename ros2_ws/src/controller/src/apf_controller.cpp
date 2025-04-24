@@ -34,6 +34,9 @@ std::tuple<double, double> APFController::compute(std::vector<geometry_msgs::msg
     control_input_y += apf_gain_ * distance_vec.y / distance * (1 - inter_agent_distance_ / distance);
   }
 
+  control_input_x /= distances_to_neighbours.size();
+  control_input_y /= distances_to_neighbours.size();
+
   if(low_pass_filter_enabled_)
   {
     filtered_x = alpha_ * filtered_x + (1 - alpha_) * control_input_x;
