@@ -9,7 +9,8 @@ services:
       - /dev/ttyUSB0
     tty: true
     volumes:
-      - ./ros2_ws/src/controller/config/:/ros2_ws/src/controller/config/    
+      - ./ros2_ws/src/controller/config/tracking_init.json:/ros2_ws/src/controller/config/tracking_init.json
+      - ./ros2_ws/src/swarm_robot_launch/config/:/ros2_ws/src/swarm_robot_launch/config/
     environment:
       - ROS_DOMAIN_ID=${ROS_DOMAIN_ID}
 
